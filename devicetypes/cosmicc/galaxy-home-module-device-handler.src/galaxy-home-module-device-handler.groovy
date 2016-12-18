@@ -13,6 +13,12 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
+ 
+preferences {
+    input("deviceId", "text", title: "Device ID")
+    input("token", "text", title: "Access Token")
+}
+
 metadata {
 	definition (name: "Galaxy Home Module Device Handler", namespace: "cosmicc", author: "cosmicc", oauth: true) {
 		capability "Battery"
@@ -40,8 +46,85 @@ metadata {
 	}
 
 	tiles {
-		// TODO: define your main and details tiles here
+		valueTile("temperature", "device.temperature", width: 2, height: 2){
+            state "temperature", label: '${currentValue}°F', unit:"",
+            	backgroundColors: [
+                    [value: 25, color: "#202040"],
+                    [value: 30, color: "#202080"]
+                ]
+		}
+        
+        valueTile("humidity", "device.humidity", width: 2, height: 2){
+            state "humidity", label: '${currentValue}%', unit:"",
+            	backgroundColors: [
+                    [value: 50, color: "#202040"],
+                    [value: 80, color: "#202080"]
+                ]
+		}
+                valueTile("signal", "device.signal", width: 1, height: 1){
+            state "signal", label: '${currentValue}db', unit:"",
+            	backgroundColors: [
+                    [value: 50, color: "#202040"],
+                    [value: 80, color: "#202080"]
+                ]
+		}
+        
+        standardTile("refresh", "device.temperature", inactiveLabel: false, decoration: "flat") {
+            state "default", action:"polling.poll", icon:"st.secondary.refresh"
+        }
+        
+        main "temperature"
+		details(["temperature", "humidity", "signal", "refresh"])
 	}
+}
+
+def ping() {
+	return 1 
+}
+
+// handle commands
+def poll() {
+	log.debug "Executing 'poll'"
+    pullData()
+}
+
+private pullData() {
+    def temperatureClosure = { response ->
+	  	log.debug "Temeprature Request was successful, $response.data"
+      
+      	sendEvent(name: "temperature", value: response.data.return_value)
+	}
+    def temperatureParams = [
+  		uri: "https://api.particle.io/v1/devices/${deviceId}/getTemp",
+        body: [access_token: token],  
+        success: temperatureClosure
+	]
+	httpPost(temperatureParams)
+    
+    def humidityClosure = { response ->
+	  	log.debug "Humidity Request was successful, $response.data"
+      
+      	sendEvent(name: "humidity", value: response.data.return_value)
+	}
+    def humidityParams = [
+  		uri: "https://api.particle.io/v1/devices/${deviceId}/getHum",
+        body: [access_token: token],  
+        success: humidityClosure
+	]
+	httpPost(humidityParams)
+    
+        def signalClosure = { response ->
+	  	log.debug "Signal Request was successful, $response.data"
+      
+      	sendEvent(name: "signal", value: response.data.return_value)
+	}
+    def signalParams = [
+  		uri: "https://api.particle.io/v1/devices/${deviceId}/getSig",
+        body: [access_token: token],  
+        success: signalClosure
+	]
+	httpPost(signalParams)
+    
 }
 
 // parse events into attributes
@@ -98,11 +181,6 @@ def configure() {
 	// TODO: handle 'configure' command
 }
 
-def ping() {
-	log.debug "Executing 'ping'"
-	// TODO: handle 'ping' command
-}
-
 def off() {
 	log.debug "Executing 'off'"
 	// TODO: handle 'off' command
@@ -111,11 +189,6 @@ def off() {
 def on() {
 	log.debug "Executing 'on'"
 	// TODO: handle 'on' command
-}
-
-def poll() {
-	log.debug "Executing 'poll'"
-	// TODO: handle 'poll' command
 }
 
 def refresh() {
