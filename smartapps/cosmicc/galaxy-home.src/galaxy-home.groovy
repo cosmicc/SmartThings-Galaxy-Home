@@ -27,7 +27,7 @@ definition(
 
 preferences {
     section {
-        input "All Devices", "capability.sensor"
+        input "devices", "capability.sensor", multiple: true
     }
 }
 
@@ -56,5 +56,10 @@ def uninstalled() {
 }
 
 def initialize() {
+  devices.poll()
+  runEvery5Minutes(devpoll) 
+}
 
+def devpoll() {
+ devices.poll()
 }
