@@ -31,6 +31,7 @@ metadata {
 		capability "Motion Sensor"
 		capability "Polling"
 		capability "Refresh"
+        capability "Beacon"
 		capability "Relative Humidity Measurement"
 		capability "Sensor"
 		capability "Signal Strength"
@@ -38,14 +39,48 @@ metadata {
 		capability "Temperature Measurement"
 		capability "Test Capability"
 		capability "Thermostat"
+        
+    attribute "GHM_Version", "number"
+    attribute "Leds", "number"
+    attribute "Uptime", "string"
+    attribute "LastRestart", "string"
+    attribute "Systemmode", "number"
+    attribute "Pri_Color", "string"
+    attribute "Sec_color", "string"
+    attribute "LOM", "enum", ["true", "false"]
+    attribute "Sleeping", "enum", ["true", "false"]
+    attribute "Anim_Speed", "number"
+    attribute "Brightness", "number"
+    attribute "Connected", "enum", ["true", "false"]
+    
+    command "Command", ["string", "string"]
 	}
-
 
 	simulator {
 		// TODO: define status and reply messages here
 	}
-
+   
 	tiles {
+        standardTile("Connected", "device.Connected", width: 1, height: 1){
+            state "false", label: "OFFLINE", backgroundColor: "#696969"
+       		state "true", label: "ONLINE", backgroundColor: "#00B900"
+            
+		}
+    	standardTile("GHM_Version", "device.GHM_Version", width: 1, height: 1){
+            state "GHM_Version", label: 'GHM Version: ${currentValue}', unit:""
+		}
+        standardTile("Leds", "device.Leds", width: 1, height: 1){
+            state "Leds", label: 'Leds: ${currentValue}', unit:""
+		}
+        valueTile("Brightness", "device.Brightness", width: 1, height: 1){
+            state "Brightness", label: 'Brightness: ${currentValue}', unit:""
+		}
+        standardTile("Last_Restart", "device.Last_Restart", width: 1, height: 1){
+            state "Last_Restart", label: 'Last Restart: ${currentValue}', unit:""
+		}    	
+        standardTile("Uptime", "device.Uptime", width: 1, height: 1){
+            state "Uptime", label: 'Uptime: ${currentValue}', unit:""
+		}
 		valueTile("temperature", "device.temperature", width: 2, height: 2){
             state "temperature", label: '${currentValue}°F', unit:"",
             	backgroundColors: [
@@ -61,11 +96,11 @@ metadata {
                     [value: 80, color: "#202080"]
                 ]
 		}
-                valueTile("signal", "device.signal", width: 1, height: 1){
-            state "signal", label: '${currentValue}db', unit:"",
+                valueTile("signal", "device.Wifi_Signal", width: 1, height: 1){
+            state "signal", label: '${currentValue}db', unit:"db",
             	backgroundColors: [
-                    [value: 50, color: "#202040"],
-                    [value: 80, color: "#202080"]
+                    [value: -40, color: "#00FF00"],
+                    [value: -85, color: "#FF0000"]
                 ]
 		}
         
@@ -73,8 +108,8 @@ metadata {
             state "default", action:"polling.poll", icon:"st.secondary.refresh"
         }
         
-        main "temperature"
-		details(["temperature", "humidity", "signal", "refresh"])
+        main "Connected"
+		details(["Connected","signal","GHM_Version","Leds","Brightness","Last_Restart","Uptime","temperature", "humidity", "refresh"])
 	}
 }
 
@@ -84,8 +119,32 @@ def ping() {
 
 // handle commands
 def poll() {
-	log.debug "Executing 'poll'"
-    pullData()
+	log.debug "Retrieving Particle Data for ${deviceId}"
+    ParticleVar("GHM_Version")
+    ParticleVar("Leds")
+    ParticleVar("Brightness")
+    ParticleVar("Last_Restart")
+    ParticleVar("Uptime")
+    ParticleVar("System_Mode")
+    ParticleVar("Sleeping")
+    ParticleVar("Wifi_Signal")
+}
+
+def ParticleVar(String parvar) {
+    def params = [
+        uri:  "https://api.particle.io/v1/devices/${deviceId}/${parvar}?access_token=${token}",
+        contentType: 'application/json',
+    ]
+    try {
+        httpGet(params) {resp ->
+        sendEvent(name: parvar, value: resp.data.result)
+        sendEvent(name: "Connected", value: resp.data.coreInfo.connected)
+        //log.debug "resp data: ${resp.data}"
+        //log.debug "${parvar}: ${resp.data.result}"
+        }
+    } catch (e) {
+        log.error "error: $e"
+    }
 }
 
 private pullData() {
