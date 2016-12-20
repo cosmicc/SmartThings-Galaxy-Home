@@ -81,9 +81,9 @@ def uninstalled() {
 }
 
 def initialize() {
-  schedule("0 * * * * ?", polldevices)
+  schedule("0 * * * * ?", poll_devices)
 }
 
-def polldevices() {
+def poll_devices() {
  alldevices.poll()
 }
