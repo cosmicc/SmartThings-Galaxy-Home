@@ -19,15 +19,40 @@ definition(
     author: "cosmicc",
     description: "Galaxy Home SpartApp",
     category: "Convenience",
+    singleInstance: true,
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
     iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
     oauth: true)
-
+   
+mappings {
+  path("/motion") {
+    action: [
+      GET: "processmotion"
+    ]
+  }
+}
 
 preferences {
     section {
-        input "devices", "capability.sensor", multiple: true
+        input "alldevices", "capability.beacon", title: "All Devices", multiple: true
+        //input "kitchen", "capability.beacon", title: "Kitchen"
+        //input "livingroom", "capability.beacon", title: "Living Room"
+        //input "stairway", "capability.beacon", title: "Stairway"
+    }
+}
+
+void processmotion() {
+    def device = params.device
+    switch(device) {
+        case "LivingRoom":
+            log.debug "HOLY SHIT!!"
+            break
+        case "motion_ended":
+            switches.off()
+            break
+        default:
+            httpError(400, "$command is not a valid command for all switches specified")
     }
 }
 
@@ -56,10 +81,9 @@ def uninstalled() {
 }
 
 def initialize() {
-  devices.poll()
-  runEvery5Minutes(devpoll) 
+  schedule("0 * * * * ?", polldevices)
 }
 
-def devpoll() {
- devices.poll()
+def polldevices() {
+ alldevices.poll()
 }
