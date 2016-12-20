@@ -19,6 +19,14 @@ preferences {
     input("token", "text", title: "Access Token")
 }
 
+mappings {
+  path("/switches/:motion") {
+    action: [
+      PUT: "updateSwitches"
+    ]
+  }
+}
+
 metadata {
 	definition (name: "Galaxy Home Module Device Handler", namespace: "cosmicc", author: "cosmicc", oauth: true) {
 		capability "Battery"
@@ -40,20 +48,23 @@ metadata {
 		capability "Test Capability"
 		capability "Thermostat"
         
-    attribute "GHM_Version", "number"
-    attribute "Leds", "number"
-    attribute "Uptime", "string"
-    attribute "LastRestart", "string"
-    attribute "Systemmode", "number"
-    attribute "Pri_Color", "string"
-    attribute "Sec_color", "string"
-    attribute "LOM", "enum", ["true", "false"]
-    attribute "Sleeping", "enum", ["true", "false"]
-    attribute "Anim_Speed", "number"
-    attribute "Brightness", "number"
-    attribute "Connected", "enum", ["true", "false"]
+    attribute "version", "number"
+    attribute "leds", "number"
+    attribute "uptime", "string"
+    attribute "lastrestart", "string"
+    attribute "systemmode", "number"
+    attribute "pricolor", "string"
+    attribute "seccolor", "string"
+    attribute "lom", "enum", ["true", "false"]
+    attribute "sleeping", "enum", ["true", "false"]
+    attribute "animspeed", "number"
+    attribute "brightness", "number"
+    attribute "connected", "enum", ["true", "false"]
+    attribute "lastmotion", "number"
+    attribute "brightness", "number"
     
-    command "Command", ["string", "string"]
+    
+    command "command", ["string", "string"]
 	}
 
 	simulator {
@@ -61,25 +72,40 @@ metadata {
 	}
    
 	tiles {
-        standardTile("Connected", "device.Connected", width: 1, height: 1){
+        standardTile("connected", "device.connected", width: 1, height: 1){
             state "false", label: "OFFLINE", backgroundColor: "#696969"
        		state "true", label: "ONLINE", backgroundColor: "#00B900"
             
 		}
-    	standardTile("GHM_Version", "device.GHM_Version", width: 1, height: 1){
-            state "GHM_Version", label: 'GHM Version: ${currentValue}', unit:""
+    	standardTile("version", "device.version", width: 1, height: 1){
+            state "version", label: 'GHM Version: ${currentValue}', unit:""
 		}
-        standardTile("Leds", "device.Leds", width: 1, height: 1){
-            state "Leds", label: 'Leds: ${currentValue}', unit:""
+        standardTile("leds", "device.leds", width: 1, height: 1){
+            state "leds", label: 'Leds: ${currentValue}', unit:""
 		}
-        valueTile("Brightness", "device.Brightness", width: 1, height: 1){
-            state "Brightness", label: 'Brightness: ${currentValue}', unit:""
+        valueTile("brightness", "device.brightness", width: 1, height: 1){
+            state "brightness", label: 'Brightness: ${currentValue}', unit:""
 		}
-        standardTile("Last_Restart", "device.Last_Restart", width: 1, height: 1){
-            state "Last_Restart", label: 'Last Restart: ${currentValue}', unit:""
+        standardTile("lastrestart", "device.lastrestart", width: 1, height: 1){
+            state "lastrestart", label: 'Last Restart: ${currentValue}', unit:""
 		}    	
-        standardTile("Uptime", "device.Uptime", width: 1, height: 1){
-            state "Uptime", label: 'Uptime: ${currentValue}', unit:""
+        standardTile("uptime", "device.uptime", width: 1, height: 1){
+            state "uptime", label: 'Uptime: ${currentValue}', unit:""
+		}
+            	standardTile("lastmotion", "device.lastmotion", width: 1, height: 1){
+            state "lastmotion", label: 'Last Motion: ${currentValue} Min ago', unit:"Minutes"
+		}
+            	standardTile("pricolor", "device.pricolor", width: 1, height: 1){
+            state "pricolor", label: 'Primary Color: ${currentValue}', unit:""
+		}
+            	standardTile("seccolor", "device.seccolor", width: 1, height: 1){
+            state "seccolor", label: 'Secondary Color: ${currentValue}', unit:""
+		}
+              standardTile("systemmode", "device.systemmode", width: 1, height: 1){
+            state "systemmode", label: 'System Mode: ${currentValue}', unit:""
+		}
+                    standardTile("animspeed", "device.animspeed", width: 1, height: 1){
+            state "animspeed", label: 'Animation Speed: ${currentValue}%', unit:"%"
 		}
 		valueTile("temperature", "device.temperature", width: 2, height: 2){
             state "temperature", label: '${currentValue}°F', unit:"",
@@ -96,7 +122,7 @@ metadata {
                     [value: 80, color: "#202080"]
                 ]
 		}
-                valueTile("signal", "device.Wifi_Signal", width: 1, height: 1){
+                valueTile("signal", "device.signal", width: 1, height: 1){
             state "signal", label: '${currentValue}db', unit:"db",
             	backgroundColors: [
                     [value: -40, color: "#00FF00"],
@@ -108,8 +134,8 @@ metadata {
             state "default", action:"polling.poll", icon:"st.secondary.refresh"
         }
         
-        main "Connected"
-		details(["Connected","signal","GHM_Version","Leds","Brightness","Last_Restart","Uptime","temperature", "humidity", "refresh"])
+        main "connected"
+		details(["connected","signal","version","leds","brightness","lastrestart","uptime","lastmotion","systemmode","animspeed","pricolor","seccolor","temperature", "humidity", "refresh"])
 	}
 }
 
@@ -119,15 +145,45 @@ def ping() {
 
 // handle commands
 def poll() {
-	log.debug "Retrieving Particle Data for ${deviceId}"
-    ParticleVar("GHM_Version")
-    ParticleVar("Leds")
-    ParticleVar("Brightness")
-    ParticleVar("Last_Restart")
-    ParticleVar("Uptime")
-    ParticleVar("System_Mode")
-    ParticleVar("Sleeping")
-    ParticleVar("Wifi_Signal")
+    def connected = ParticleCheckAlive()
+    if (connected == true) {
+    log.debug "Retrieving Particle Data for ${deviceId}"
+    ParticleVar("version")
+    ParticleVar("leds")
+    ParticleVar("brightness")
+    ParticleVar("lastrestart")
+    ParticleVar("uptime")
+    ParticleVar("systemmode")
+    ParticleVar("sleeping")
+    ParticleVar("signal")
+    ParticleVar("lastmotion")
+    ParticleVar("animspeed")
+    ParticleVar("pricolor")
+    ParticleVar("seccolor")
+    }
+}
+
+def ParticleCheckAlive() {
+    def params = [
+        uri:  "https://api.particle.io/v1/devices/${deviceId}/?access_token=${token}",
+        contentType: 'application/json',
+    ]
+    try {
+        httpGet(params) {resp ->
+        sendEvent(name: "connected", value: resp.data.connected)
+        sendEvent(name: "lastheard", value: resp.data.last_heard)
+        sendEvent(name: "name", value: resp.data.name)
+        if (resp.data.connected == true) {
+        log.debug "Device ${resp.data.name} is Connected"
+        return true;
+        } else {
+        log.debug "Device ${resp.data.name} is Disconnected"
+        return false;
+        }
+        }
+    } catch (e) {
+        log.error "error: $e"
+    }
 }
 
 def ParticleVar(String parvar) {
@@ -138,7 +194,7 @@ def ParticleVar(String parvar) {
     try {
         httpGet(params) {resp ->
         sendEvent(name: parvar, value: resp.data.result)
-        sendEvent(name: "Connected", value: resp.data.coreInfo.connected)
+        
         //log.debug "resp data: ${resp.data}"
         //log.debug "${parvar}: ${resp.data.result}"
         }
