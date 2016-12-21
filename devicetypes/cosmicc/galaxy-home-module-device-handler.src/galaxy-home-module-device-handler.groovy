@@ -110,16 +110,20 @@ metadata {
 		valueTile("temperature", "device.temperature", width: 2, height: 2){
             state "temperature", label: '${currentValue}°F', unit:"",
             	backgroundColors: [
-                    [value: 25, color: "#202040"],
-                    [value: 30, color: "#202080"]
+                	[value: 65, color: "#000090"],
+                    [value: 72, color: "#009000"],
+                    [value: 75, color: "#009000"],
+                    [value: 82, color: "#900000"]
                 ]
 		}
         
         valueTile("humidity", "device.humidity", width: 2, height: 2){
             state "humidity", label: '${currentValue}%', unit:"",
             	backgroundColors: [
-                    [value: 50, color: "#202040"],
-                    [value: 80, color: "#202080"]
+                    [value: 20, color: "#000090"],
+                    [value: 30, color: "#009000"],
+                    [value: 50, color: "#009000"],
+                    [value: 70, color: "#900000"]
                 ]
 		}
                 valueTile("signal", "device.signal", width: 1, height: 1){
@@ -160,6 +164,8 @@ def poll() {
     ParticleVar("animspeed")
     ParticleVar("pricolor")
     ParticleVar("seccolor")
+    ParticleVar("temperature")
+    ParticleVar("humidity")
     }
 }
 
