@@ -26,7 +26,7 @@ definition(
     oauth: true)
    
 mappings {
-  path("/motion") {
+  path("/command/:command") {
     action: [
       GET: "processmotion"
     ]
@@ -44,6 +44,7 @@ preferences {
 
 void processmotion() {
     def device = params.device
+    log.trace params
     switch(device) {
         case "LivingRoom":
             log.debug "HOLY SHIT!!"
@@ -60,6 +61,9 @@ void processmotion() {
 def installed()
 {
     log.debug "Installed: $settings"
+    log.trace state
+    state.appURL = "https://graph-na02-useast1.api.smartthings.com/api/smartapps/installations/${app.id}/command?access_token=${state.accessToken}"
+    createWebhook()
     initialize()
 }
 
@@ -74,6 +78,7 @@ def updated()
 
 def uninstalled() {
     log.trace "Uninstalled called"
+    deleteWebhook()
     getChildDevices().each {device ->
         log.info "Deleting Device $device.displayName"
         deleteChildDevice(device.deviceNetworkId)
@@ -81,9 +86,40 @@ def uninstalled() {
 }
 
 def initialize() {
-  schedule("0 * * * * ?", poll_devices)
+  schedule("0 */3 * * * ?", poll_devices)
 }
 
 def poll_devices() {
  alldevices.poll()
+}
+
+void createWebhook() {
+	log.debug "Creating a Particle webhook "
+    try {         
+		httpPost(uri: "https://api.particle.io/v1/webhooks",
+      			body: [access_token: "c38ecbb487154838b9a7f0d991c45d536d625cda", 
+        		event: "command",
+                url: state.appURL, 
+                requestType: "PUT", 
+                mydevices: true]
+      			) {response -> log.debug (response.data)}
+    }
+ 	catch (e) {
+   		log.error "error: $e"
+    }
+}
+
+void deleteWebhook() {
+try{
+httpGet(uri:"https://api.particle.io/v1/webhooks?access_token=c38ecbb487154838b9a7f0d991c45d536d625cda",
+    ) {response -> response.data.each { 
+    		hook ->
+				//log.debug hook.event
+                if (hook.event == "command") {
+                	httpDelete(uri:"https://api.particle.io/v1/webhooks/${hook.id}?access_token=c38ecbb487154838b9a7f0d991c45d536d625cda")
+                    log.debug "Deleted the existing webhook with the id: ${hook.id} and the event name: command"
+                }
+           }
+ }
+ } catch (all) {log.debug "Couldn't delete webhook, moving on"}
 }
