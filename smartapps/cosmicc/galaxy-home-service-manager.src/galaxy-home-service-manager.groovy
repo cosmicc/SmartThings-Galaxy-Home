@@ -56,7 +56,8 @@ def page3() {
 def installed() {
 	state.webhookName = "motion"
     state.appURL = "https://graph-na02-useast1.api.smartthings.com/api/smartapps/installations/${app.id}/${state.webhookName}/{{PARTICLE_EVENT_VALUE}}/{{PARTICLE_DEVICE_ID}}?access_token=${state.accessToken}"
-	//log.debug "Installed with settings: ${settings}"
+	log.debug "Galaxy Home Service Manager Installed with settings: ${settings}"
+     schedule("0 */3 * * * ?", poll_devices)
     checkWebhook() 
     //setupSensors()
 }
@@ -164,6 +165,10 @@ def checkToken() {
 	if (!state.accessToken) {
     	createAccessToken() 
     }
+}
+
+def poll_devices() {
+ alldevices.poll()
 }
 
 // api mappings for the Particle.io API to talk to the SmartThings API
