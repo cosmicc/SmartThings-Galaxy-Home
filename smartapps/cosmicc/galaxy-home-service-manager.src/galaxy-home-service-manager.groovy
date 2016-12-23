@@ -1,5 +1,5 @@
 /*
- *  Particle.io Device Example
+ *  Galaxy Home Service Manager SmartApp
  *
  *  
 */
