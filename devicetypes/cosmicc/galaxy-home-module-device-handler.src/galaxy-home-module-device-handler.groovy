@@ -19,14 +19,6 @@ preferences {
     input("token", "text", title: "Access Token")
 }
 
-mappings {
-  path("/switches/:motion") {
-    action: [
-      PUT: "updateSwitches"
-    ]
-  }
-}
-
 metadata {
 	definition (name: "Galaxy Home Module Device Handler", namespace: "cosmicc", author: "cosmicc", oauth: true) {
 		capability "Battery"
@@ -169,6 +161,14 @@ def poll() {
     }
 }
 
+def command(String a, String b) {
+ if (a == deviceId) {
+   log.debug "Device ${deviceId} setting motion: ${b}"
+   if (b == "motion_started") sendEvent(name: "motion", value: "active")
+   else if (b == "motion_ended") sendEvent(name: "motion", value: "inactive")
+ }
+}
+
 def ParticleCheckAlive() {
     def params = [
         uri:  "https://api.particle.io/v1/devices/${deviceId}/?access_token=${token}",
@@ -207,6 +207,14 @@ def ParticleVar(String parvar) {
     } catch (e) {
         log.error "error: $e"
     }
+}
+
+def motionevt() {
+  if (devid == deviceId) {
+    log.debug "Motion Event ${evtdata}"
+    if(evtdata == "started") sendEvent(name: motion, value: true)
+    else if (evtdata == "stopped") sendEvent(name: motion, value: false)
+  }  
 }
 
 private pullData() {
