@@ -21,9 +21,13 @@ preferences {
 
 metadata {
 	definition (name: "Galaxy Home Module Device Handler", namespace: "cosmicc", author: "cosmicc", oauth: true) {
-		capability "Battery"
-		capability "Carbon Monoxide Detector"
+		//capability "Battery"
+		//capability "Carbon Monoxide Detector"
+        capability "Switch"
+  		capability "SwitchLevel"
+		capability "Actuator"
 		capability "Color Control"
+        //capability "Bulb"
 		capability "Color Temperature"
 		capability "Configuration"
 		capability "Health Check"
@@ -32,13 +36,13 @@ metadata {
 		capability "Polling"
 		capability "Refresh"
         capability "Beacon"
-		capability "Relative Humidity Measurement"
+		//capability "Relative Humidity Measurement"
 		capability "Sensor"
 		capability "Signal Strength"
 		capability "Smoke Detector"
-		capability "Temperature Measurement"
+		//capability "Temperature Measurement"
 		capability "Test Capability"
-		capability "Thermostat"
+		//capability "Thermostat"
         
     attribute "version", "number"
     attribute "leds", "number"
@@ -47,59 +51,82 @@ metadata {
     attribute "systemmode", "number"
     attribute "pricolor", "string"
     attribute "seccolor", "string"
-    attribute "lom", "enum", ["true", "false"]
+    attribute "motionlight", "enum", ["true", "false"]
     attribute "sleeping", "enum", ["true", "false"]
     attribute "animspeed", "number"
     attribute "brightness", "number"
     attribute "connected", "enum", ["true", "false"]
     attribute "lastmotion", "number"
     attribute "brightness", "number"
+    attribute "fltemp", "number"
     
     
     command "command", ["string", "string"]
+    command "motionLight"
+    command "sysmodeUp"
+    command "sysmodeDown"
+    command "setAdjustedColor"
+    command "setAnimSpeed"
 	}
 
 	simulator {
 		// TODO: define status and reply messages here
 	}
    
-	tiles {
+	tiles (scale: 2) {
+    multiAttributeTile(name:"switch", type: "generic", width: 6, height: 4, canChangeIcon: true) {
+    tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
+        attributeState "on", label:'${name}', action:"off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+        attributeState "off", label:'${name}', action:"on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+        attributeState "turningOn", label:'${name}', action:"off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+        attributeState "turningOff", label:'${name}', action:"on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+    }
+    tileAttribute ("device.systemmode", label:'${device.systemmode}', key: "VALUE_CONTROL") {
+         attributeState("systemmode", action: "sysmodeUp")
+        attributeState("systemmode", action: "sysmodeDown")
+    }
+    tileAttribute ("device.animspeed", key: "SLIDER_CONTROL") {
+        attributeState "animspeed", action:"setAnimSpeed"
+    }
+    tileAttribute ("device.color", key: "COLOR_CONTROL") {
+        attributeState "color", action:"setAdjustedColor"
+    }
+        tileAttribute ("device.leds", key: "SECONDARY_CONTROL") {
+        attributeState "leds", label:'${currentValue} Leds'
+        }
+}
+
+    
         standardTile("connected", "device.connected", width: 1, height: 1){
-            state "false", label: "OFFLINE", backgroundColor: "#696969"
+            state "false", label: "OFFLINE", backgroundColor: "#B9B9B9"
        		state "true", label: "ONLINE", backgroundColor: "#00B900"
             
 		}
     	standardTile("version", "device.version", width: 1, height: 1){
-            state "version", label: 'GHM Version: ${currentValue}', unit:""
+            state "version", label: '${currentValue}', unit:""
 		}
-        standardTile("leds", "device.leds", width: 1, height: 1){
-            state "leds", label: 'Leds: ${currentValue}', unit:""
-		}
-        valueTile("brightness", "device.brightness", width: 1, height: 1){
-            state "brightness", label: 'Brightness: ${currentValue}', unit:""
-		}
-        standardTile("lastrestart", "device.lastrestart", width: 1, height: 1){
+        
+        standardTile("lastrestart", "device.lastrestart", width: 3, height: 1){
             state "lastrestart", label: 'Last Restart: ${currentValue}', unit:""
-		}    	
-        standardTile("uptime", "device.uptime", width: 1, height: 1){
+		}
+        standardTile("uptime", "device.uptime", width: 3, height: 1){
             state "uptime", label: 'Uptime: ${currentValue}', unit:""
 		}
-            	standardTile("lastmotion", "device.lastmotion", width: 1, height: 1){
+            	standardTile("lastmotion", "device.lastmotion", width: 3, height: 1){
             state "lastmotion", label: 'Last Motion: ${currentValue} Min ago', unit:"Minutes"
 		}
-            	standardTile("pricolor", "device.pricolor", width: 1, height: 1){
-            state "pricolor", label: 'Primary Color: ${currentValue}', unit:""
+            	standardTile("motionlight", "device.motionlight", width: 1, height: 1){
+            state "false", label: "LOM: OFF", action: "motionLight", backgroundColor: "B9B9B9"
+       		state "true", label: "LOM: ON", action: "motionLight", backgroundColor: "#00B900"
 		}
             	standardTile("seccolor", "device.seccolor", width: 1, height: 1){
             state "seccolor", label: 'Secondary Color: ${currentValue}', unit:""
 		}
-              standardTile("systemmode", "device.systemmode", width: 1, height: 1){
-            state "systemmode", label: 'System Mode: ${currentValue}', unit:""
-		}
-                    standardTile("animspeed", "device.animspeed", width: 1, height: 1){
-            state "animspeed", label: 'Animation Speed: ${currentValue}%', unit:"%"
-		}
-		valueTile("temperature", "device.temperature", width: 2, height: 2){
+        standardTile("motion", "device.motion", width: 2, height: 1) {
+    state "active", label: 'Motion ${currentValue}', backgroundColor: "#00b900"
+    state "inactive", label: 'Motion ${currentValue}', backgroundColor: "B9B9B9"
+}
+		valueTile("temperature", "device.temperature", width: 1, height: 1){
             state "temperature", label: '${currentValue}°F', unit:"",
             	backgroundColors: [
                 	[value: 65, color: "#000090"],
@@ -109,13 +136,23 @@ metadata {
                 ]
 		}
         
-        valueTile("humidity", "device.humidity", width: 2, height: 2){
+        valueTile("humidity", "device.humidity", width: 1, height: 1){
             state "humidity", label: '${currentValue}%', unit:"",
             	backgroundColors: [
                     [value: 20, color: "#000090"],
                     [value: 30, color: "#009000"],
                     [value: 50, color: "#009000"],
                     [value: 70, color: "#900000"]
+                ]
+		}
+
+		valueTile("fltemp", "device.fltemp", width: 1, height: 1){
+            state "fltemp", label: '${currentValue}°F', unit:"",
+            	backgroundColors: [
+                	[value: 65, color: "#000090"],
+                    [value: 72, color: "#009000"],
+                    [value: 75, color: "#009000"],
+                    [value: 82, color: "#900000"]
                 ]
 		}
                 valueTile("signal", "device.signal", width: 1, height: 1){
@@ -131,7 +168,7 @@ metadata {
         }
         
         main "connected"
-		details(["connected","signal","version","leds","brightness","lastrestart","uptime","lastmotion","systemmode","animspeed","pricolor","seccolor","temperature", "humidity", "refresh"])
+		details(["switch","version","signal","connected","temperature","humidity","fltemp","motionlight","motion","lastmotion","lastrestart","uptime","refresh"])
 	}
 }
 
@@ -158,6 +195,8 @@ def poll() {
     ParticleVar("seccolor")
     ParticleVar("temperature")
     ParticleVar("humidity")
+    ParticleVar("fltemp")
+    ParticleVar("motionlight")
     }
 }
 
@@ -167,6 +206,32 @@ def command(String a, String b) {
    if (b == "motion_started") sendEvent(name: "motion", value: "active")
    else if (b == "motion_ended") sendEvent(name: "motion", value: "inactive")
  }
+}
+
+def sendCmd(String cmd) {
+    log.debug "Sending command to particle device: $cmd"
+    def commandClosure = { response ->
+    if (response.data.return_value != 0) log.debug "Command send successful, $response.data"
+      else log.debug "Command send un-successful!, $response.data"
+	}
+    def commandParams = [
+  		uri: "https://api.particle.io/v1/devices/${deviceId}/command",
+        body: [access_token: token, arg: cmd],
+        success: commandClosure
+	]
+	httpPost(commandParams)
+}
+
+def motionLight() {
+  sendCmd("LMC")
+}
+
+def sysmodeUp() {
+ sendCmd("S+")
+}
+
+def sysmodeDown() {
+ sendCmd("S-")
 }
 
 def ParticleCheckAlive() {
@@ -284,6 +349,10 @@ def parse(String description) {
 
 }
 
+def setLevel(value) {
+  log.debug "Brightness: ${value}"
+}
+
 // handle commands
 def setHue() {
 	log.debug "Executing 'setHue'"
@@ -295,9 +364,28 @@ def setSaturation() {
 	// TODO: handle 'setSaturation' command
 }
 
-def setColor() {
-	log.debug "Executing 'setColor'"
-	// TODO: handle 'setColor' command
+def setAnimSpeed(value) {
+  log.debug "Sending Animation Speed: ${value}%"
+  sendCmd("N${value}")
+}
+
+def setAdjustedColor(value) {
+    log.debug "${value}"
+    setColorRGB(value.hex)
+    }
+
+def setColorRGB(value) {
+	log.debug "Device: ${deviceId} SetColor: ${value}"
+    sendCmd(value)
+}
+
+def setColor(value) {
+	log.debug "Device: ${deviceId} SetColor: ${value}"
+    String hhue = Integer.toHexString(value.hue);
+    if (hhue.length() == 1) hhue = "0"+hhue;
+    String hsat = Integer.toHexString(value.saturation);
+    log.debug "${hhue}${hsat}"
+    sendCmd("@${hhue}${hsat}")
 }
 
 def setColorTemperature() {
@@ -312,12 +400,14 @@ def configure() {
 
 def off() {
 	log.debug "Executing 'off'"
-	// TODO: handle 'off' command
+    sendEvent(name: "switch", value: "off")
+	sendCmd("P0")
 }
 
 def on() {
 	log.debug "Executing 'on'"
-	// TODO: handle 'on' command
+     sendEvent(name: "switch", value: "on")
+	sendCmd("P1")
 }
 
 def refresh() {
