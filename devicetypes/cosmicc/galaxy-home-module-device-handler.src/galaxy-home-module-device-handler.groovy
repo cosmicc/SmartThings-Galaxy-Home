@@ -350,7 +350,9 @@ def parse(String description) {
 }
 
 def setLevel(value) {
-  log.debug "Brightness: ${value}"
+sendCmd("B${value}")
+  log.debug "New Brightness: ${value}%"
+  
 }
 
 // handle commands
