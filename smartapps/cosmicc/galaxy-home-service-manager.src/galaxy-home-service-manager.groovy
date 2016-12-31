@@ -16,7 +16,7 @@ definition(
 
 // Preferences and setup pages
 preferences {
-    page(name: "page1", title: "Particle Device", nextPage: "page2", uninstall: true) {
+    page(name: "page1", title: "Particle Login", nextPage: "page2", uninstall: true) {
         section("Username and Password") {
         	input "particleUsername", "text", title: "Your Particle.io Username", required: true
             input "particlePassword", "password", title: "Your Particle.io Password", required: true
@@ -31,7 +31,7 @@ def page2() {
    	dynamicPage(name: "page2") {
    		section("Generate Token") {
 			if (loginToParticle()) {
-            	paragraph title: "Success logging in to Particle.io", "Auth Token generated"            
+            	paragraph title: "Success logging in to Particle.io", "Login Successful"            
             }
             else {
             	paragraph title: "Error logging in to Particle.io", "Check your username and password or check the log for other errors"
@@ -42,7 +42,7 @@ def page2() {
 
 def page3() {
 	dynamicPage(name: "page3") {
-       	section("Particle Device to use"){
+       	section("Select Particle Devices"){
    		    //def particleDevices = getDevices()
             input "alldevices", "capability.beacon", title: "All Devices", multiple: true
    	    	//input(name: "particleDevice", type: "enum", title: "Select ALL the Galaxy Home Devices", required: true, multiple: true, options: particleDevices)
@@ -56,16 +56,27 @@ def page3() {
 def installed() {
 	state.webhookName = "motion"
     state.appURL = "https://graph-na02-useast1.api.smartthings.com/api/smartapps/installations/${app.id}/${state.webhookName}/{{PARTICLE_EVENT_VALUE}}/{{PARTICLE_DEVICE_ID}}?access_token=${state.accessToken}"
-	log.debug "Galaxy Home Service Manager Installed with settings: ${settings}"
-     schedule("0 */3 * * * ?", poll_devices)
+	log.debug "Galaxy Home Service Manager SmartApp Installed"
+    subscribe(location, "sunset", sunsetHandler)
+    subscribe(location, "sunrise", sunriseHandler)
+    schedule("0 */3 * * * ?", poll_devices)
+    schedule("0 * * * * ?", huechange)
+    schedule("0 0 11 * * ?", sendautobrite, [data: [brite: 100]])
+    schedule("0 0 23 * * ?", sendautobrite, [data: [brite: 50]])
+    schedule("0 0 1 * * ?", sendautobrite, [data: [brite: 20]])
+    sunriseTurnOn(location.currentValue("sunriseTime"))
+    sunsetTurnOn(location.currentValue("sunsetTime"))
+    log.debug "Device Poll Schedule started"
     checkWebhook() 
+    state.ghue = 0
     //setupSensors()
 }
 
 def updated() {
-	//log.debug "Updated with settings: ${settings}"
+	log.debug "GHSM SmartApp Updated Successfully"
 	unsubscribe()
     checkWebhook()
+    state.ghue = 0
     //setupSensors()
 }
 
@@ -171,7 +182,6 @@ def poll_devices() {
  alldevices.poll()
 }
 
-// api mappings for the Particle.io API to talk to the SmartThings API
 mappings {
     path("/motion/:data/:deviceid") {
         action: [
@@ -179,10 +189,6 @@ mappings {
         ]
     }
 }
-
-// -----------------------------------------------------------
-// Send and receive commands with the Particle device
-// -----------------------------------------------------------
 
 // send an on command to the particle device
 def switchOnHandler(evt) {
@@ -222,6 +228,64 @@ def switchValueHandler(evt) {
     }
 }
 
+def sunsetHandler(evt) {
+    sunsetTurnOn(evt.value)
+}
+
+def sunriseHandler(evt) {
+    sunriseTurnOn(evt.value)
+}
+
+def sunriseTurnOn(sunriseString) {
+    //get the Date value for the string
+    def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunriseString)
+    //calculate the offset                             //v minutes
+    def timeAfterSunrise = new Date(sunriseTime.time + (90 * 60 * 1000))
+    def tenAfterSunrise = new Date(sunriseTime.time + (10 * 60 * 1000))    
+    //log.debug "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
+    //schedule this to run one time
+    runOnce(timeAfterSunrise, sendautobrite, [data: [brite: 75]])
+    runOnce(tenAfterSunrise, sendautobrite, [data: [brite: 50]])
+}
+
+def sunsetTurnOn(sunsetString) {
+    //get the Date value for the string
+    def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunsetString)
+    //calculate the offset                          //v minutes
+    def timeAfterSunset = new Date(sunsetTime.time + (60 * 60 * 1000))
+    //log.debug "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
+    //schedule this to run one time
+    runOnce(timeAfterSunset, sendautobrite, [data: [brite: 75]])
+}
+
+void sendautobrite(data) {
+ try {
+      httpPost (uri: "https://api.particle.io/v1/devices/events",
+        body: [access_token: state.particleToken,
+        name: "ghmcmd",
+        private: false,
+        data: "T${data.brite}" ] ) {response -> log.debug "Auto Brightness change sent: T${data.brite}, Responce: ${response.data}" }
+        }
+     catch (e) {
+   		log.error "error: $e"
+    }
+}
+
+void huechange() {
+ try {
+      httpPost (uri: "https://api.particle.io/v1/devices/events",
+        body: [access_token: state.particleToken,
+        name: "ghmcmd",
+        private: false,
+        data: "H${state.ghue}" ] ) {response -> log.debug "HUE change sent: H${state.ghue}, Responce: ${response.data}" }
+        }
+     catch (e) {
+   		log.error "error: $e"
+    }
+    state.ghue = state.ghue + 1
+    if (state.ghue == 9) state.ghue = 1
+}
+
 // got the webhook from the particle device now do something with the information
 def motionevent() {
     alldevices.command(params.param3, params.param2)
@@ -229,10 +293,6 @@ def motionevent() {
 	log.debug "Got motion data: ${params.param3}, ${params.param2}"
     return [Respond: "OK"]
 }
-
-// -----------------------------------------------------------
-// Uninstall Section
-// -----------------------------------------------------------
 
 def uninstalled() {
   log.debug "Uninstalling ParticleThings"
