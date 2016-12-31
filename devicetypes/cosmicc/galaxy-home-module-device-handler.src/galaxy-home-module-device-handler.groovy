@@ -53,6 +53,7 @@ metadata {
     attribute "seccolor", "string"
     attribute "motionlight", "enum", ["true", "false"]
     attribute "sleeping", "enum", ["true", "false"]
+    attribute "autobright", "enum", ["true", "false"]
     attribute "animspeed", "number"
     attribute "brightness", "number"
     attribute "connected", "enum", ["true", "false"]
@@ -63,6 +64,7 @@ metadata {
     
     command "command", ["string", "string"]
     command "motionLight"
+    command "autoBright"
     command "sysmodeUp"
     command "sysmodeDown"
     command "setAdjustedColor"
@@ -119,6 +121,10 @@ metadata {
             state "false", label: "LOM: OFF", action: "motionLight", backgroundColor: "B9B9B9"
        		state "true", label: "LOM: ON", action: "motionLight", backgroundColor: "#00B900"
 		}
+                 standardTile("autobright", "device.autobright", width: 1, height: 1){
+            state "false", label: "Auto Bright: OFF", action: "autoBright", backgroundColor: "B9B9B9"
+       		state "true", label: "Auto Bright: ON", action: "autoBright", backgroundColor: "#00B900"
+		}
             	standardTile("seccolor", "device.seccolor", width: 1, height: 1){
             state "seccolor", label: 'Secondary Color: ${currentValue}', unit:""
 		}
@@ -168,7 +174,7 @@ metadata {
         }
         
         main "connected"
-		details(["switch","version","signal","connected","temperature","humidity","fltemp","motionlight","motion","lastmotion","lastrestart","uptime","refresh"])
+		details(["switch","version","signal","connected","temperature","humidity","fltemp","motionlight","autobright","motion","lastmotion","lastrestart","uptime","refresh"])
 	}
 }
 
@@ -223,7 +229,11 @@ def sendCmd(String cmd) {
 }
 
 def motionLight() {
-  sendCmd("LMC")
+  sendCmd("LLOM")
+}
+
+def autoBright() {
+  sendCmd("TODB")
 }
 
 def sysmodeUp() {
@@ -414,7 +424,7 @@ def on() {
 
 def refresh() {
 	log.debug "Executing 'refresh'"
-	// TODO: handle 'refresh' command
+	poll()
 }
 
 def setHeatingSetpoint() {
