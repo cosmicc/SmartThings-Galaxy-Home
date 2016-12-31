@@ -1,7 +1,6 @@
 /*
  *  Galaxy Home Service Manager SmartApp
  *
- *  
 */
 definition(
     name: "Galaxy Home Service Manager",
@@ -50,22 +49,12 @@ def page3() {
 	}
 }
 
-// -----------------------------------------------------------
-// Setup functions
-// -----------------------------------------------------------
 def installed() {
 	state.webhookName = "motion"
     state.appURL = "https://graph-na02-useast1.api.smartthings.com/api/smartapps/installations/${app.id}/${state.webhookName}/{{PARTICLE_EVENT_VALUE}}/{{PARTICLE_DEVICE_ID}}?access_token=${state.accessToken}"
 	log.debug "Galaxy Home Service Manager SmartApp Installed"
-    subscribe(location, "sunset", sunsetHandler)
-    subscribe(location, "sunrise", sunriseHandler)
     schedule("0 */3 * * * ?", poll_devices)
     schedule("0 * * * * ?", huechange)
-    schedule("0 0 11 * * ?", sendautobrite, [data: [brite: 100]])
-    schedule("0 0 23 * * ?", sendautobrite, [data: [brite: 50]])
-    schedule("0 0 1 * * ?", sendautobrite, [data: [brite: 20]])
-    sunriseTurnOn(location.currentValue("sunriseTime"))
-    sunsetTurnOn(location.currentValue("sunsetTime"))
     log.debug "Device Poll Schedule started"
     checkWebhook() 
     state.ghue = 0
@@ -224,49 +213,6 @@ def switchValueHandler(evt) {
     	httpPost("https://api.particle.io/v1/devices/${particleDevice}/setValue?access_token=${state.particleToken}","command=${pinToSet}:${pinValue}",) {response -> log.debug (response.data)}
 	}
  	catch (e) {
-   		log.error "error: $e"
-    }
-}
-
-def sunsetHandler(evt) {
-    sunsetTurnOn(evt.value)
-}
-
-def sunriseHandler(evt) {
-    sunriseTurnOn(evt.value)
-}
-
-def sunriseTurnOn(sunriseString) {
-    //get the Date value for the string
-    def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunriseString)
-    //calculate the offset                             //v minutes
-    def timeAfterSunrise = new Date(sunriseTime.time + (90 * 60 * 1000))
-    def tenAfterSunrise = new Date(sunriseTime.time + (10 * 60 * 1000))    
-    //log.debug "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
-    //schedule this to run one time
-    runOnce(timeAfterSunrise, sendautobrite, [data: [brite: 75]])
-    runOnce(tenAfterSunrise, sendautobrite, [data: [brite: 50]])
-}
-
-def sunsetTurnOn(sunsetString) {
-    //get the Date value for the string
-    def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunsetString)
-    //calculate the offset                          //v minutes
-    def timeAfterSunset = new Date(sunsetTime.time + (60 * 60 * 1000))
-    //log.debug "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
-    //schedule this to run one time
-    runOnce(timeAfterSunset, sendautobrite, [data: [brite: 75]])
-}
-
-void sendautobrite(data) {
- try {
-      httpPost (uri: "https://api.particle.io/v1/devices/events",
-        body: [access_token: state.particleToken,
-        name: "ghmcmd",
-        private: false,
-        data: "T${data.brite}" ] ) {response -> log.debug "Auto Brightness change sent: T${data.brite}, Responce: ${response.data}" }
-        }
-     catch (e) {
    		log.error "error: $e"
     }
 }

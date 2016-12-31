@@ -1,18 +1,7 @@
-/**
- *  Galaxy Home Auto Brightness Service
- *
- *  Copyright 2016 Ian Perry
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at:
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
- *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
- *  for the specific language governing permissions and limitations under the License.
- *
- */
+/*
+ *  Galaxy Home Time of Day Auto Brightness Service SmartApp
+ *  
+*/
 definition(
     name: "Galaxy Home Auto Brightness Service",
     namespace: "cosmicc",
@@ -35,7 +24,6 @@ preferences {
 
 def installed() {
 	log.debug "Installed with settings: ${settings}"
-
 	initialize()
 }
 
@@ -47,7 +35,75 @@ def updated() {
 }
 
 def initialize() {
-	// TODO: subscribe to attributes, devices, locations, etc.
+	
+    subscribe(location, "sunset", sunsetHandler)
+    subscribe(location, "sunrise", sunriseHandler)
+    schedule("0 0 23 * * ?", todnight)
+    schedule("0 0 1 * * ?", todlate)
+    sunriseTurnOn(location.currentValue("sunriseTime"))
+    sunsetTurnOn(location.currentValue("sunsetTime"))
 }
 
-// TODO: implement event handlers
+void sendautobrite(brite) {
+ try {
+      httpPost (uri: "https://api.particle.io/v1/devices/events",
+        body: [access_token: appSettings.token,
+        name: "ghmcmd",
+        private: false,
+        data: "T${brite}" ] ) {response -> log.debug "Auto Brightness change sent: T${brite}, Responce: ${response.data}" }
+        }
+     catch (e) {
+   		log.error "error: $e"
+    }
+}
+
+
+def sunsetHandler(evt) {
+    sunsetTurnOn(evt.value)
+}
+
+def sunriseHandler(evt) {
+    sunriseTurnOn(evt.value)
+}
+
+def sunriseTurnOn(sunriseString) {
+    //get the Date value for the string
+    def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunriseString)
+    //calculate the offset                             //v minutes
+    def timeAfterSunrise = new Date(sunriseTime.time + (180 * 60 * 1000))
+    def tenAfterSunrise = new Date(sunriseTime.time + (30 * 60 * 1000))    
+    //log.debug "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
+    //schedule this to run one time
+    runOnce(timeAfterSunrise, todday)
+    runOnce(tenAfterSunrise, todsunrise)
+}
+
+def sunsetTurnOn(sunsetString) {
+    //get the Date value for the string
+    def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunsetString)
+    //calculate the offset                          //v minutes
+    def timeAfterSunset = new Date(sunsetTime.time + (60 * 60 * 1000))
+    //log.debug "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
+    //schedule this to run one time
+    runOnce(timeAfterSunset, todeve)
+}
+
+def todsunrise() {
+ sendautobrite(50)
+}
+
+def todday() {
+ sendautobrite(100)
+}
+
+def todeve() {
+ sendautobrite(75)
+}
+
+def todnight() {
+ sendautobrite(50)
+}
+
+def todlate() {
+ sendautobrite(20)
+}
