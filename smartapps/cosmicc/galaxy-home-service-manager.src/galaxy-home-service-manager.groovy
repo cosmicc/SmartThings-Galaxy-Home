@@ -53,7 +53,7 @@ def installed() {
 	state.webhookName = "motion"
     state.appURL = "https://graph-na02-useast1.api.smartthings.com/api/smartapps/installations/${app.id}/${state.webhookName}/{{PARTICLE_EVENT_VALUE}}/{{PARTICLE_DEVICE_ID}}?access_token=${state.accessToken}"
 	log.debug "Galaxy Home Service Manager SmartApp Installed"
-    schedule("0 */3 * * * ?", poll_devices)
+    //schedule("0 */3 * * * ?", poll_devices)
     schedule("0 * * * * ?", huechange)
     log.debug "Device Poll Schedule started"
     checkWebhook() 
@@ -223,7 +223,7 @@ void huechange() {
         body: [access_token: state.particleToken,
         name: "ghmcmd",
         private: false,
-        data: "H${state.ghue}" ] ) {response -> log.debug "HUE change sent: H${state.ghue}, Responce: ${response.data}" }
+        data: "H${state.ghue}" ] ) {response -> log.debug "HUE change sent: H${state.ghue}, Response: ${response.data}" }
         }
      catch (e) {
    		log.error "error: $e"

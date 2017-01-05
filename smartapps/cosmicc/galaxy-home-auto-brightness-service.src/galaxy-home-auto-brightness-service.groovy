@@ -29,15 +29,13 @@ def installed() {
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-
 	unsubscribe()
 	initialize()
 }
 
 def initialize() {
-	
-    subscribe(location, "sunset", sunsetHandler)
-    subscribe(location, "sunrise", sunriseHandler)
+    subscribe(location, "sunsetTime", sunsetHandler)
+    subscribe(location, "sunriseTime", sunriseHandler)
     schedule("0 0 23 * * ?", todnight)
     schedule("0 0 1 * * ?", todlate)
     sunriseTurnOn(location.currentValue("sunriseTime"))
@@ -50,7 +48,7 @@ void sendautobrite(brite) {
         body: [access_token: appSettings.token,
         name: "ghmcmd",
         private: false,
-        data: "T${brite}" ] ) {response -> log.debug "Auto Brightness change sent: T${brite}, Responce: ${response.data}" }
+        data: "T${brite}" ] ) {response -> log.debug "Auto Brightness change sent: T${brite}, Response: ${response.data}" }
         }
      catch (e) {
    		log.error "error: $e"
@@ -59,10 +57,12 @@ void sendautobrite(brite) {
 
 
 def sunsetHandler(evt) {
+ log.trace "Running sunsetHandler - data: ${evt}"
     sunsetTurnOn(evt.value)
 }
 
 def sunriseHandler(evt) {
+log.trace "Running sunriseHandler - data: ${evt}"
     sunriseTurnOn(evt.value)
 }
 
@@ -74,6 +74,7 @@ def sunriseTurnOn(sunriseString) {
     def tenAfterSunrise = new Date(sunriseTime.time + (30 * 60 * 1000))    
     //log.debug "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
     //schedule this to run one time
+    log.trace "Running sunriseturnOn - data: ${sunriseTime}"
     runOnce(timeAfterSunrise, todday)
     runOnce(tenAfterSunrise, todsunrise)
 }
@@ -82,9 +83,10 @@ def sunsetTurnOn(sunsetString) {
     //get the Date value for the string
     def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunsetString)
     //calculate the offset                          //v minutes
-    def timeAfterSunset = new Date(sunsetTime.time + (60 * 60 * 1000))
+    def timeAfterSunset = new Date(sunsetTime.time + (90 * 60 * 1000))
     //log.debug "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
     //schedule this to run one time
+     log.trace "Running sunsetturnOn - data: ${sunsetTime}"
     runOnce(timeAfterSunset, todeve)
 }
 
