@@ -45,28 +45,36 @@ metadata {
 		//capability "Thermostat"
         
     attribute "version", "number"
+    attribute "seccolor", "number"
     attribute "leds", "number"
     attribute "uptime", "string"
     attribute "lastrestart", "string"
+    attribute "details", "string"
+    attribute "details2", "string"
     attribute "systemmode", "number"
-    attribute "pricolor", "string"
-    attribute "seccolor", "string"
+    //attribute "pricolor", "string"
+    //attribute "seccolor", "string"
     attribute "motionlight", "enum", ["true", "false"]
-    attribute "sleeping", "enum", ["true", "false"]
+    attribute "innight", "enum", ["true", "false"]
     attribute "autobright", "enum", ["true", "false"]
     attribute "animspeed", "number"
     attribute "brightness", "number"
     attribute "connected", "enum", ["true", "false"]
     attribute "lastmotion", "number"
-    attribute "brightness", "number"
+    attribute "nightlight", "enum", ["on", "off"]
     attribute "fltemp", "number"
     
     
     command "command", ["string", "string"]
-    command "motionLight"
-    command "autoBright"
-    command "sysmodeUp"
-    command "sysmodeDown"
+    command "sendCmd", ["string"]
+    command "nightLight", ["string"]
+    command "motionLightOn"
+    command "motionLightOff"
+    command "autoBrightOn"
+    command "autoBrightOff"
+    command "nightLightOn"
+    command "nightLightOff"
+    command "sysmodeChange", ["string"]
     command "setAdjustedColor"
     command "setAnimSpeed"
 	}
@@ -78,103 +86,117 @@ metadata {
 	tiles (scale: 2) {
     multiAttributeTile(name:"switch", type: "generic", width: 6, height: 4, canChangeIcon: true) {
     tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
-        attributeState "on", label:'${name}', action:"off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-        attributeState "off", label:'${name}', action:"on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
-        attributeState "turningOn", label:'${name}', action:"off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-        attributeState "turningOff", label:'${name}', action:"on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+        attributeState "on", label:'${name}', action:"off", icon:"st.lights.multi-light-bulb-on", backgroundColor:"#79b821", nextState:"turningOff"
+        attributeState "off", label:'${name}', action:"on", icon:"st.lights.multi-light-bulb-off", backgroundColor:"#ffffff", nextState:"turningOn"
+        attributeState "turningOn", label:'${name}', action:"off", icon:"st.lights.multi-light-bulb-on", backgroundColor:"#79b821", nextState:"turningOff"
+        attributeState "turningOff", label:'${name}', action:"on", icon:"st.lights.multi-light-bulb-off", backgroundColor:"#ffffff", nextState:"turningOn"
     }
-    tileAttribute ("device.systemmode", label:'${device.systemmode}', key: "VALUE_CONTROL") {
-         attributeState("systemmode", action: "sysmodeUp")
-        attributeState("systemmode", action: "sysmodeDown")
+    tileAttribute ("device.systemmode", label: "device.systemmode", key: "VALUE_CONTROL") {
+        attributeState("systemmode", action: "sysmodeChange")
     }
-    tileAttribute ("device.animspeed", key: "SLIDER_CONTROL") {
-        attributeState "animspeed", action:"setAnimSpeed"
+    tileAttribute ("device.level", label: "device.level", key: "SLIDER_CONTROL") {
+        attributeState "level", action:"switch level.setLevel", icon: "st.illuminance.illuminance.light"
     }
     tileAttribute ("device.color", key: "COLOR_CONTROL") {
         attributeState "color", action:"setAdjustedColor"
     }
-        tileAttribute ("device.leds", key: "SECONDARY_CONTROL") {
-        attributeState "leds", label:'${currentValue} Leds'
-        }
-}
-
-    
-        standardTile("connected", "device.connected", width: 1, height: 1){
+     //   tileAttribute ("device.leds", key: "SECONDARY_CONTROL") {
+     //   attributeState "leds", label:'${currentValue} Leds'
+     //   }
+}   
+        valueTile("connected", "device.connected", width: 1, height: 1){
             state "false", label: "OFFLINE", backgroundColor: "#B9B9B9"
-       		state "true", label: "ONLINE", backgroundColor: "#00B900"
-            
+       		state "true", label: "ONLINE", backgroundColor: "#00A000" 
 		}
-    	standardTile("version", "device.version", width: 1, height: 1){
-            state "version", label: '${currentValue}', unit:""
-		}
-        
-        standardTile("lastrestart", "device.lastrestart", width: 3, height: 1){
-            state "lastrestart", label: 'Last Restart: ${currentValue}', unit:""
-		}
-        standardTile("uptime", "device.uptime", width: 3, height: 1){
-            state "uptime", label: 'Uptime: ${currentValue}', unit:""
-		}
-            	standardTile("lastmotion", "device.lastmotion", width: 3, height: 1){
+           standardTile("lastmotion", "device.lastmotion", width: 2, height: 1){
             state "lastmotion", label: 'Last Motion: ${currentValue} Min ago', unit:"Minutes"
 		}
-            	standardTile("motionlight", "device.motionlight", width: 1, height: 1){
-            state "false", label: "LOM: OFF", action: "motionLight", backgroundColor: "B9B9B9"
-       		state "true", label: "LOM: ON", action: "motionLight", backgroundColor: "#00B900"
+           valueTile("motionlight", "device.motionlight", width: 1, height: 1){
+            state "false", label: "Motion Light", action: "motionLightOn", backgroundColor: "#B9B9B9"
+       		state "true", label: "Motion Light", action: "motionLightOff", backgroundColor: "#00A000"
 		}
-                 standardTile("autobright", "device.autobright", width: 1, height: 1){
-            state "false", label: "Auto Bright: OFF", action: "autoBright", backgroundColor: "B9B9B9"
-       		state "true", label: "Auto Bright: ON", action: "autoBright", backgroundColor: "#00B900"
+           valueTile("nightlight", "device.nightlight", width: 1, height: 1){
+            state "false", label: "Night Light", action: "nightLightOn", backgroundColor: "#B9B9B9"
+       		state "true", label: "Night Light", action: "nightLightOff", backgroundColor: "#00A000"
 		}
-            	standardTile("seccolor", "device.seccolor", width: 1, height: 1){
-            state "seccolor", label: 'Secondary Color: ${currentValue}', unit:""
+           valueTile("autobright", "device.autobright", width: 1, height: 1){
+            state "false", label: "Auto Bright", action: "autoBrightOn", backgroundColor: "#B9B9B9"
+       		state "true", label: "Auto Bright", action: "autoBrightOff", backgroundColor: "#00A000"
 		}
-        standardTile("motion", "device.motion", width: 2, height: 1) {
-    state "active", label: 'Motion ${currentValue}', backgroundColor: "#00b900"
-    state "inactive", label: 'Motion ${currentValue}', backgroundColor: "B9B9B9"
-}
-		valueTile("temperature", "device.temperature", width: 1, height: 1){
-            state "temperature", label: '${currentValue}°F', unit:"",
+           valueTile("innight", "device.innight", width: 1, height: 1){
+            state "false", label: "Night Light", backgroundColor: "#B9B9B9"
+       		state "true", label: "Night Light", backgroundColor: "#00A000"
+		}
+           valueTile("motion", "device.motion", width: 1, height: 1) {
+            state "false", label: "Motion", backgroundColor: "#B9B9B9"
+       		state "true", label: "Motion", backgroundColor: "#00A000"
+        }
+		  valueTile("temperature", "device.temperature", width: 1, height: 1){
+            state "temperature", label: '${currentValue}°F', unit:"F",
             	backgroundColors: [
-                	[value: 65, color: "#000090"],
-                    [value: 72, color: "#009000"],
-                    [value: 75, color: "#009000"],
-                    [value: 82, color: "#900000"]
+                	[value: 65, color: "#0000A0"],
+                    [value: 66, color: "#00A000"],
+                    [value: 75, color: "#00A000"],
+                    [value: 76, color: "#A0A000"],
+                    [value: 82, color: "#A0A000"],
+                    [value: 83, color: "#A00000"]
                 ]
 		}
         
         valueTile("humidity", "device.humidity", width: 1, height: 1){
-            state "humidity", label: '${currentValue}%', unit:"",
+            state "humidity", label: '${currentValue}%', unit:"%",
             	backgroundColors: [
-                    [value: 20, color: "#000090"],
-                    [value: 30, color: "#009000"],
-                    [value: 50, color: "#009000"],
-                    [value: 70, color: "#900000"]
+                    [value: 0, color: "#0000A0"],
+                    [value: 34, color: "#0000A0"],
+                    [value: 35, color: "#00A000"],
+                    [value: 60, color: "#00A000"],
+                    [value: 61, color: "#A00000"]
                 ]
 		}
 
 		valueTile("fltemp", "device.fltemp", width: 1, height: 1){
-            state "fltemp", label: '${currentValue}°F', unit:"",
+            state "fltemp", label: '${currentValue}°F', unit:"F",
             	backgroundColors: [
-                	[value: 65, color: "#000090"],
-                    [value: 72, color: "#009000"],
-                    [value: 75, color: "#009000"],
-                    [value: 82, color: "#900000"]
+                	[value: 69, color: "#0000A0"],
+                    [value: 70, color: "#00A000"],
+                    [value: 74, color: "#00A000"],
+                    [value: 75, color: "#A0A000"],
+                    [value: 79, color: "#A0A000"],
+                    [value: 80, color: "#A00000"]
                 ]
 		}
                 valueTile("signal", "device.signal", width: 1, height: 1){
             state "signal", label: '${currentValue}db', unit:"db",
             	backgroundColors: [
-                    [value: -40, color: "#00FF00"],
-                    [value: -85, color: "#FF0000"]
+                    [value: 0, color: "#00A000"],
+                    [value: -65, color: "#00A000"],
+                    [value: -66, color: "#A0A000"],
+                    [value: -79, color: "#A0A000"],
+                    [value: -80, color: "#A00000"],
+                    [value: -110, color: "#A00000"]
                 ]
 		}
-        
-        standardTile("refresh", "device.temperature", inactiveLabel: false, decoration: "flat") {
+           controlTile("pricolor", "device.color", "color", label: "Primary", height: 6, width: 6, inactiveLabel: false) {
+			state "color", action: "color control.setColor"
+		}
+           controlTile("seccolor", "device.seccolor", "color", label: "Secondary", height: 6, width: 6, inactiveLabel: false) {
+			state "color", action: "color control.setAdjustedColor2"
+		}
+           controlTile("animspeed", "device.animspeed", "slider", height: 1, width: 4, range: "(1..100)") {
+			state "animspeed", action:"setAnimSpeed"
+		}
+           valueTile("details", "device.details", width: 3, height: 1) {
+			state "details", label: '${currentValue}', defaultState: true
+		}
+           valueTile("details2", "device.details2", width: 2, height: 1) {
+			state "detils2", label: '${currentValue}', defaultState: true
+		}     
+           standardTile("refresh", "device.temperature", inactiveLabel: false, decoration: "flat") {
             state "default", action:"polling.poll", icon:"st.secondary.refresh"
-        }
-        
+        }       
         main "connected"
-		details(["switch","version","signal","connected","temperature","humidity","fltemp","motionlight","autobright","motion","lastmotion","lastrestart","uptime","refresh"])
+		details(["switch","connected","signal","temperature","humidity","fltemp","motion","motionlight","autobright","nightlight","innight",
+        "lastmotion","details","details2","animspeed","refresh","pricolor","seccolor"])
 	}
 }
 
@@ -193,30 +215,37 @@ def poll() {
     ParticleVar("lastrestart")
     ParticleVar("uptime")
     ParticleVar("systemmode")
-    ParticleVar("sleeping")
+    //ParticleVar("sleeping")
     ParticleVar("signal")
     ParticleVar("lastmotion")
     ParticleVar("animspeed")
-    ParticleVar("pricolor")
-    ParticleVar("seccolor")
+    ParticleVar("motiondelay")
+    ParticleVar("innight")
+    //ParticleVar("pricolor")
+    //ParticleVar("seccolor")
     ParticleVar("temperature")
     ParticleVar("humidity")
     ParticleVar("fltemp")
     ParticleVar("motionlight")
+    ParticleVar("autobright")
+    ParticleVar("nightlight")
+    sendEvent(name: "details", value: "Uptime: ${state.upt}\nLast: ${state.lastrestart}")
+    sendEvent(name: "details2", value: "Version: ${state.version}\n# of Leds: ${state.leds}")
     }
 }
 
 def command(String a, String b) {
  if (a == deviceId) {
-   log.debug "Device ${deviceId} setting motion: ${b}"
+   log.debug "Device ${deviceId} incoming event: ${b}"
    if (b == "motion_started") sendEvent(name: "motion", value: "active")
    else if (b == "motion_ended") sendEvent(name: "motion", value: "inactive")
+   else sendEvent(name: "level", value: b)
  }
 }
 
 def sendCmd(String cmd) {
     log.debug "Sending command to particle device: $cmd"
-    def commandClosure = { response ->
+    def commandClosure = { response -> 
     if (response.data.return_value != 0) log.debug "Command send successful, $response.data"
       else log.debug "Command send un-successful!, $response.data"
 	}
@@ -228,20 +257,48 @@ def sendCmd(String cmd) {
 	httpPost(commandParams)
 }
 
-def motionLight() {
-  sendCmd("LLOM")
+def nightLight(nlstate) {
+sendEvent(name: "nightlight", value: "${nlstate}")
+if (nlstate == "on") sendCmd("N1")
+else if (nlstate == "off") sendCmd("N0")
+else if (nlstate == "force") sendCmd("N9")
+ 
 }
 
-def autoBright() {
-  sendCmd("TODB")
+def nightLightOn() {
+  sendEvent(name: "nightlight", value: "true")
+  sendCmd("NLM1")
 }
 
-def sysmodeUp() {
- sendCmd("S+")
+def nightLightOff() {
+  sendEvent(name: "nightlight", value: "false")
+  sendCmd("NLM0")
 }
 
-def sysmodeDown() {
- sendCmd("S-")
+def motionLightOn() {
+  sendEvent(name: "motionlight", value: "true")
+  sendCmd("LLOM1")
+}
+
+def motionLightOff() {
+  sendEvent(name: "motionlight", value: "false")
+  sendCmd("LLOM0")
+}
+
+def autoBrightOn() {
+  sendEvent(name: "autobright", value: "true")
+  sendCmd("TODB1")
+}
+
+def autoBrightOff() {
+  sendEvent(name: "autobright", value: "false")
+  sendCmd("TODB0")
+}
+
+def sysmodeChange(data) {
+ log.trace "Running sysmodeChange ${data}"
+ sendEvent(name: "systemmode", value: "${data}")
+ sendCmd("S${data}")
 }
 
 def ParticleCheckAlive() {
@@ -274,7 +331,12 @@ def ParticleVar(String parvar) {
     ]
     try {
         httpGet(params) {resp ->
-        sendEvent(name: parvar, value: resp.data.result)
+        if (parvar == "brightness") sendEvent(name: "level", value: resp.data.result)
+        else sendEvent(name: parvar, value: resp.data.result)
+        if (parvar == "uptime") state.upt = resp.data.result
+         else if (parvar == "lastrestart") state.lastrestart = resp.data.result
+         else if (parvar == "version") state.version = resp.data.result
+         else if (parvar == "leds") state.leds = resp.data.result
         
         //log.debug "resp data: ${resp.data}"
         //log.debug "${parvar}: ${resp.data.result}"
@@ -361,6 +423,7 @@ def parse(String description) {
 
 def setLevel(value) {
 sendCmd("B${value}")
+sendEvent(name: "level", value: "${value}")
   log.debug "New Brightness: ${value}%"
   
 }
@@ -378,12 +441,19 @@ def setSaturation() {
 
 def setAnimSpeed(value) {
   log.debug "Sending Animation Speed: ${value}%"
-  sendCmd("N${value}")
+  sendCmd("A${value}")
 }
 
 def setAdjustedColor(value) {
     log.debug "${value}"
-    setColorRGB(value.hex)
+    sendCmd(value.hex)
+    }
+    
+def setAdjustedColor2(value) {
+    log.debug "Secondary color change: ${value}"
+    ncolor = value.hex
+    ncolor.replaceAll("#","@")
+    sendCmd(ncolor)
     }
 
 def setColorRGB(value) {
@@ -393,11 +463,14 @@ def setColorRGB(value) {
 
 def setColor(value) {
 	log.debug "Device: ${deviceId} SetColor: ${value}"
-    String hhue = Integer.toHexString(value.hue);
+    setColorRGB(value.hex)
+    
+    /*String hhue = Integer.toHexString(value.hue);
     if (hhue.length() == 1) hhue = "0"+hhue;
     String hsat = Integer.toHexString(value.saturation);
     log.debug "${hhue}${hsat}"
     sendCmd("@${hhue}${hsat}")
+    */
 }
 
 def setColorTemperature() {
