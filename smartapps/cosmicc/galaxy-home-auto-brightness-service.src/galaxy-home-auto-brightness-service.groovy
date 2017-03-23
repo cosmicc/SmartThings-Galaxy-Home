@@ -34,12 +34,12 @@ def updated() {
 }
 
 def initialize() {
-    subscribe(location, "sunsetTime", sunsetHandler)
-    subscribe(location, "sunriseTime", sunriseHandler)
+    subscribe(location, "sunset", sunsetHandler)
+    subscribe(location, "sunrise", sunriseHandler)
     schedule("0 0 23 * * ?", todnight)
     schedule("0 0 1 * * ?", todlate)
     sunriseTurnOn(location.currentValue("sunriseTime"))
-    sunsetTurnOn(location.currentValue("sunsetTime"))
+    //sunsetTurnOn(location.currentValue("sunsetTime"))
 }
 
 void sendautobrite(brite) {
