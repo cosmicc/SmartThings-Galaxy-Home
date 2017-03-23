@@ -74,7 +74,8 @@ metadata {
     command "autoBrightOff"
     command "nightLightOn"
     command "nightLightOff"
-    command "sysmodeChange", ["string"]
+    command "sysmodeChangeUp"
+    command "sysmodeChangeDn"
     command "setAdjustedColor"
     command "setAnimSpeed"
 	}
@@ -92,7 +93,8 @@ metadata {
         attributeState "turningOff", label:'${name}', action:"on", icon:"st.lights.multi-light-bulb-off", backgroundColor:"#ffffff", nextState:"turningOn"
     }
     tileAttribute ("device.systemmode", label: "device.systemmode", key: "VALUE_CONTROL") {
-        attributeState("systemmode", action: "sysmodeChange")
+        attributeState "VALUE_UP", action: "sysmodeChangeUp"
+        attributeState "VALUE_DOWN", action: "sysmodeChangeDn"
     }
     tileAttribute ("device.level", label: "device.level", key: "SLIDER_CONTROL") {
         attributeState "level", action:"switch level.setLevel", icon: "st.illuminance.illuminance.light"
@@ -295,10 +297,14 @@ def autoBrightOff() {
   sendCmd("TODB0")
 }
 
-def sysmodeChange(data) {
- log.trace "Running sysmodeChange ${data}"
- sendEvent(name: "systemmode", value: "${data}")
- sendCmd("S${data}")
+def sysmodeChangeUp() {
+ log.trace "Running sysmodeChange Up"
+ sendCmd("SU")
+}
+
+def sysmodeChangeDn() {
+ log.trace "Running sysmodeChange Down"
+ sendCmd("SD")
 }
 
 def ParticleCheckAlive() {
