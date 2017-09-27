@@ -106,34 +106,34 @@ metadata {
      //   attributeState "leds", label:'${currentValue} Leds'
      //   }
 }   
-        valueTile("connected", "device.connected", width: 1, height: 1){
+        valueTile("connected", "device.connected", width: 2, height: 2){
             state "false", label: "OFFLINE", backgroundColor: "#B9B9B9"
        		state "true", label: "ONLINE", backgroundColor: "#00A000" 
 		}
            standardTile("lastmotion", "device.lastmotion", width: 2, height: 1){
             state "lastmotion", label: 'Last Motion: ${currentValue} Min ago', unit:"Minutes"
 		}
-           valueTile("motionlight", "device.motionlight", width: 1, height: 1){
+           valueTile("motionlight", "device.motionlight", width: 2, height: 2){
             state "false", label: "Motion Light", action: "motionLightOn", backgroundColor: "#B9B9B9"
        		state "true", label: "Motion Light", action: "motionLightOff", backgroundColor: "#00A000"
 		}
-           valueTile("nightlight", "device.nightlight", width: 1, height: 1){
+           valueTile("nightlight", "device.nightlight", width: 2, height: 2){
             state "false", label: "Night Light", action: "nightLightOn", backgroundColor: "#B9B9B9"
        		state "true", label: "Night Light", action: "nightLightOff", backgroundColor: "#00A000"
 		}
-           valueTile("autobright", "device.autobright", width: 1, height: 1){
+           valueTile("autobright", "device.autobright", width: 2, height: 2){
             state "false", label: "Auto Bright", action: "autoBrightOn", backgroundColor: "#B9B9B9"
        		state "true", label: "Auto Bright", action: "autoBrightOff", backgroundColor: "#00A000"
 		}
-           valueTile("innight", "device.innight", width: 1, height: 1){
+           valueTile("innight", "device.innight", width: 2, height: 2){
             state "false", label: "Night Light", backgroundColor: "#B9B9B9"
        		state "true", label: "Night Light", backgroundColor: "#00A000"
 		}
-           valueTile("motion", "device.motion", width: 1, height: 1) {
+           valueTile("motion", "device.motion", width: 2, height: 2) {
             state "false", label: "Motion", backgroundColor: "#B9B9B9"
        		state "true", label: "Motion", backgroundColor: "#00A000"
         }
-		  valueTile("temperature", "device.temperature", width: 1, height: 1){
+		  valueTile("temperature", "device.temperature", width: 2, height: 2){
             state "temperature", label: '${currentValue}°F', unit:"F",
             	backgroundColors: [
                 	[value: 65, color: "#0000A0"],
@@ -145,7 +145,7 @@ metadata {
                 ]
 		}
         
-        valueTile("humidity", "device.humidity", width: 1, height: 1){
+        valueTile("humidity", "device.humidity", width: 2, height: 2){
             state "humidity", label: '${currentValue}%', unit:"%",
             	backgroundColors: [
                     [value: 0, color: "#0000A0"],
@@ -156,7 +156,7 @@ metadata {
                 ]
 		}
 
-		valueTile("fltemp", "device.fltemp", width: 1, height: 1){
+		valueTile("fltemp", "device.fltemp", width: 2, height: 2){
             state "fltemp", label: '${currentValue}°F', unit:"F",
             	backgroundColors: [
                 	[value: 69, color: "#0000A0"],
@@ -167,7 +167,7 @@ metadata {
                     [value: 80, color: "#A00000"]
                 ]
 		}
-                valueTile("signal", "device.signal", width: 1, height: 1){
+                valueTile("signal", "device.signal", width: 2, height: 2){
             state "signal", label: '${currentValue}db', unit:"db",
             	backgroundColors: [
                     [value: 0, color: "#00A000"],
@@ -178,12 +178,6 @@ metadata {
                     [value: -110, color: "#A00000"]
                 ]
 		}
-           controlTile("pricolor", "device.color", "color", label: "Primary", height: 6, width: 6, inactiveLabel: false) {
-			state "color", action: "color control.setColor"
-		}
-           controlTile("seccolor", "device.seccolor", "color", label: "Secondary", height: 6, width: 6, inactiveLabel: false) {
-			state "color", action: "color control.setAdjustedColor2"
-		}
            controlTile("animspeed", "device.animspeed", "slider", height: 1, width: 4, range: "(1..100)") {
 			state "animspeed", action:"setAnimSpeed"
 		}
@@ -191,7 +185,7 @@ metadata {
 			state "details", label: '${currentValue}', defaultState: true
 		}
            valueTile("details2", "device.details2", width: 2, height: 1) {
-			state "detils2", label: '${currentValue}', defaultState: true
+			state "details2", label: '${currentValue}', defaultState: true
 		}     
            standardTile("refresh", "device.temperature", inactiveLabel: false, decoration: "flat") {
             state "default", action:"polling.poll", icon:"st.secondary.refresh"
