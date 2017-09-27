@@ -64,6 +64,7 @@ def installed() {
 def updated() {
 	log.debug "GHSM SmartApp Updated Successfully"
 	unsubscribe()
+    schedule("0 1/5 * * * ?", huechange)
     checkWebhook()
     state.ghue = 0
     //setupSensors()
