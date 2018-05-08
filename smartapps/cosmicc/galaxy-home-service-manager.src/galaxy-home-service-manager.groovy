@@ -88,7 +88,7 @@ def loginToParticle() {
     	    		state.particleToken = response.data.access_token
         	       	}
                 log.debug "Created new Particle.io token"        
-	        	//log.debug "Particle Token ${state.particleToken}"
+	        	log.debug "Particle Token ${state.particleToken}"
 	        	checkToken()
 				return true
 			} catch (e) {
