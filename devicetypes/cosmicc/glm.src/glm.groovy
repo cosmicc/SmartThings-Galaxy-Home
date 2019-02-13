@@ -139,16 +139,6 @@ def ping() {
 	// TODO: handle 'ping' command
 }
 
-def off() {
-	log.debug "Executing 'off'"
-	// TODO: handle 'off' command
-}
-
-def on() {
-	log.debug "Executing 'on'"
-	// TODO: handle 'on' command
-}
-
 def setMode() {
 	log.debug "Executing 'setMode'"
 	// TODO: handle 'setMode' command
@@ -162,16 +152,6 @@ def poll() {
 def refresh() {
 	log.debug "Executing 'refresh'"
 	// TODO: handle 'refresh' command
-}
-
-def on() {
-	log.debug "Executing 'on'"
-	// TODO: handle 'on' command
-}
-
-def off() {
-	log.debug "Executing 'off'"
-	// TODO: handle 'off' command
 }
 
 def setLevel() {
