@@ -63,70 +63,62 @@ metadata {
 	}
 
 tiles {
+	valueTile("currentColor", "device.color") {
+		state "color", label: '${currentValue}', defaultState: true
+	}
+	controlTile("rgbSelector", "device.color", "color", height: 4, width: 4,
+            inactiveLabel: false) {
+    state "color", action: "color control.setColor"
+	}
 	valueTile("temperature", "device.temperature", width: 1, height: 1) {
-            state "temperature", label:'${currentValue}° ', unit: "F",
+            state "temperature", label:'${currentValue}° F', unit: "F",
             backgroundColors:[
-                [value: 25, color: "#153591"],
-                [value: 35, color: "#1e9cbb"],
-                [value: 47, color: "#90d2a7"],
-                [value: 59, color: "#44b621"],
-                [value: 67, color: "#f1d801"],
-                [value: 76, color: "#d04e00"],
-                [value: 77, color: "#bc2323"]
+                [value: 45, color: "#153591"],
+                [value: 55, color: "#1e9cbb"],
+                [value: 60, color: "#90d2a7"],
+                [value: 65, color: "#44b621"],
+                [value: 80, color: "#f1d801"],
+                [value: 85, color: "#d04e00"],
+                [value: 90, color: "#bc2323"]
             ]
         }
         standardTile("button", "device.switch", width: 1, height: 1, canChangeIcon: true) {
 			state "off", label: 'Off', icon: "st.Electronics.electronics18", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: 'On', icon: "st.Electronics.electronics18", backgroundColor: "#79b821", nextState: "off"
 		}
-        valueTile("cpuPercentage", "device.cpuPercentage", inactiveLabel: false) {
-        	state "default", label:'${currentValue}% CPU', unit:"Percentage",
+        valueTile("humidity", "device.humidity", width: 1, height: 1) {
+            state "humidity", label:'${currentValue}%',
             backgroundColors:[
-                [value: 31, color: "#153591"],
-                [value: 44, color: "#1e9cbb"],
-                [value: 59, color: "#90d2a7"],
-                [value: 74, color: "#44b621"],
-                [value: 84, color: "#f1d801"],
-                [value: 95, color: "#d04e00"],
-                [value: 96, color: "#bc2323"]
+                [value: 0, color: "#153591"],
+                [value: 10, color: "#1e9cbb"],
+                [value: 25, color: "#90d2a7"],
+                [value: 40, color: "#44b621"],
+                [value: 60, color: "#f1d801"],
+                [value: 70, color: "#d04e00"],
+                [value: 80, color: "#bc2323"]
             ]
         }
-        valueTile("memory", "device.memory", width: 1, height: 1) {
-        	state "default", label:'${currentValue} MB', unit:"MB",
+        valueTile("cpu_temp", "device.cpu_temp", width: 1, height: 1) {
+            state "cpu_temp", label:'${currentValue}° ', unit: "F",
             backgroundColors:[
-                [value: 353, color: "#153591"],
-                [value: 287, color: "#1e9cbb"],
-                [value: 210, color: "#90d2a7"],
-                [value: 133, color: "#44b621"],
-                [value: 82, color: "#f1d801"],
-                [value: 26, color: "#d04e00"],
-                [value: 20, color: "#bc2323"]
+                [value: 70, color: "#153591"],
+                [value: 75, color: "#1e9cbb"],
+                [value: 85, color: "#90d2a7"],
+                [value: 95, color: "#44b621"],
+                [value: 105, color: "#f1d801"],
+                [value: 120, color: "#d04e00"],
+                [value: 140, color: "#bc2323"]
             ]
         }
-        valueTile("diskUsage", "device.diskUsage", width: 1, height: 1) {
-        	state "default", label:'${currentValue}% Disk', unit:"Percent",
-            backgroundColors:[
-                [value: 31, color: "#153591"],
-                [value: 44, color: "#1e9cbb"],
-                [value: 59, color: "#90d2a7"],
-                [value: 74, color: "#44b621"],
-                [value: 84, color: "#f1d801"],
-                [value: 95, color: "#d04e00"],
-                [value: 96, color: "#bc2323"]
-            ]
-        }
-        standardTile("contact", "device.contact", width: 1, height: 1) {
-			state("closed", label:'${name}', icon:"st.contact.contact.closed", backgroundColor:"#79b821", action: "open")
-			state("open", label:'${name}', icon:"st.contact.contact.open", backgroundColor:"#ffa81e", action: "close")
-		}
         standardTile("restart", "device.restart", inactiveLabel: false, decoration: "flat") {
         	state "default", action:"restart", label: "Restart", displayName: "Restart"
         }
         standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat") {
         	state "default", action:"refresh.refresh", icon: "st.secondary.refresh"
         }
-        main "button"
-        details(["button", "temperature", "cpuPercentage", "memory" , "diskUsage", "contact", "restart", "refresh"])
+        main "currentColor"
+        details(["rgbSelector"])
+        //details(["button", "rgbselector", "temperature", "humidity", "cpu_temp", "restart", "refresh"])
     }
 }
 
@@ -147,22 +139,31 @@ def parse(String description) {
 
 	if (result){
     	log.debug "Device is ALIVE"
-   		sendEvent(name: "switch", value: "on")
+   		//sendEvent(name: "switch", value: "on")
     }
-    
-    if (result.containsKey("tempurature")) {
-        log.debug "tempurature: ${result.tempurature} F"
-    	sendEvent(name: "temperature", value: result.tempurature)
+    if (result.containsKey("temperature")) {
+    log.debug "temperature: ${result.temperature}"
+    sendEvent(name: "temperature", value: result.temperature)
     }
-    
     if (result.containsKey("humidity")) {
-    	log.debug "humidity: ${result.humidity}"
-        sendEvent(name: "humidity", value: result.humidity)
+    log.debug "humidity: ${result.humidity}"
+    sendEvent(name: "humidity", value: result.humidity)
+    }
+    if (result.containsKey("rssi")) {
+    log.debug "rssi: ${result.rssi}"
+    sendEvent(name: "rssi", value: result.rssi)
+    }
+    if (result.containsKey("lqi")) {
+    log.debug "link quality: ${result.lqi}"
+    sendEvent(name: "lqi", value: result.lqi)
+    }
+    if (result.containsKey("cpu_temp")) {
+    log.debug "cpu temp: ${result.cpu_temp}"
+    sendEvent(name: "cpu_temp", value: result.cpu_temp)
     }
 	// TODO: handle 'lightingMode' attribute
 	// TODO: handle 'activity' attribute
 	// TODO: handle 'presence' attribute
-	// TODO: handle 'switch' attribute
 	// TODO: handle 'colorValue' attribute
 	// TODO: handle 'hue' attribute
 	// TODO: handle 'saturation' attribute
@@ -179,13 +180,8 @@ def parse(String description) {
 	// TODO: handle 'motion' attribute
 	// TODO: handle 'occupancy' attribute
 	// TODO: handle 'presence' attribute
-	// TODO: handle 'humidity' attribute
-	// TODO: handle 'lqi' attribute
-	// TODO: handle 'rssi' attribute
 	// TODO: handle 'switch' attribute
 	// TODO: handle 'level' attribute
-	// TODO: handle 'temperature' attribute
-	// TODO: handle 'cpu_temp' attribute
 
 }
 
@@ -197,12 +193,14 @@ def setLightingMode() {
 
 def off() {
 	log.debug "Executing 'off'"
-	// TODO: handle 'off' command
+    sendEvent(name: "switch", value: "off")
+	postAction("PUT", "/api/enable?enable=off")
 }
 
 def on() {
 	log.debug "Executing 'on'"
-	// TODO: handle 'on' command
+    sendEvent(name: "switch", value: "on")
+	postAction("PUT", "/api/enable?enable=on")
 }
 
 def setColorValue() {
@@ -220,9 +218,9 @@ def setSaturation() {
 	// TODO: handle 'setSaturation' command
 }
 
-def setColor() {
-	log.debug "Executing 'setColor'"
-	// TODO: handle 'setColor' command
+def setColor(value) {
+	log.trace "Executing 'setColor' ${value}"
+	postAction("PUT", "/api/hsvcolor?hue=${value.hue}&saturation=${value.saturation}&lightness=100")
 }
 
 def setColorTemperature() {
@@ -247,12 +245,12 @@ def setMode() {
 
 def poll() {
 	log.debug "Executing 'poll'"
-	// TODO: handle 'poll' command
+	postAction("GET", "/api/poll")
 }
 
 def refresh() {
 	log.debug "Executing 'refresh'"
-	postAction("GET", "/api/poll")
+	postAction("GET", "/api/info")
 }
 
 def setLevel() {
@@ -266,7 +264,6 @@ def reset() {
 }
 
 def postAction(meth, uri) {
-	log.debug "${meth} - ${uri}"
     def result = new physicalgraph.device.HubAction(
         method: meth,
         path: uri,
@@ -274,7 +271,7 @@ def postAction(meth, uri) {
             HOST: getHostAddress()
         ]
     )
-    log.debug "result: ${result}"
+    log.debug "postAction: ${result}"
     return result
 }
 
