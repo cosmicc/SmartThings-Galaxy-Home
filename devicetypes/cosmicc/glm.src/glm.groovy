@@ -31,7 +31,7 @@ metadata {
 		capability "Activity Sensor"
 		capability "Beacon"
 		capability "Bulb"
-		capability "Color"
+		//capability "Color"
 		capability "Color Control"
 		capability "Color Mode"
 		capability "Color Temperature"
@@ -62,72 +62,28 @@ metadata {
 		// TODO: define status and reply messages here
 	}
 
-tiles {
-	valueTile("currentColor", "device.color") {
-		state "color", label: '${currentValue}', defaultState: true
-	}
-	controlTile("rgbSelector", "device.color", "color", height: 4, width: 4,
-            inactiveLabel: false) {
-    state "color", action: "color control.setColor"
-	}
-	valueTile("temperature", "device.temperature", width: 1, height: 1) {
-            state "temperature", label:'${currentValue}° F', unit: "F",
-            backgroundColors:[
-                [value: 45, color: "#153591"],
-                [value: 55, color: "#1e9cbb"],
-                [value: 60, color: "#90d2a7"],
-                [value: 65, color: "#44b621"],
-                [value: 80, color: "#f1d801"],
-                [value: 85, color: "#d04e00"],
-                [value: 90, color: "#bc2323"]
-            ]
-        }
-        standardTile("button", "device.switch", width: 1, height: 1, canChangeIcon: true) {
-			state "off", label: 'Off', icon: "st.Electronics.electronics18", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'On', icon: "st.Electronics.electronics18", backgroundColor: "#79b821", nextState: "off"
+	tiles(scale: 2) {
+		valueTile("currentColor", "device.color") {
+			state "color", label: '${currentValue}', defaultState: true
 		}
-        valueTile("humidity", "device.humidity", width: 1, height: 1) {
-            state "humidity", label:'${currentValue}%',
-            backgroundColors:[
-                [value: 0, color: "#153591"],
-                [value: 10, color: "#1e9cbb"],
-                [value: 25, color: "#90d2a7"],
-                [value: 40, color: "#44b621"],
-                [value: 60, color: "#f1d801"],
-                [value: 70, color: "#d04e00"],
-                [value: 80, color: "#bc2323"]
-            ]
-        }
-        valueTile("cpu_temp", "device.cpu_temp", width: 1, height: 1) {
-            state "cpu_temp", label:'${currentValue}° ', unit: "F",
-            backgroundColors:[
-                [value: 70, color: "#153591"],
-                [value: 75, color: "#1e9cbb"],
-                [value: 85, color: "#90d2a7"],
-                [value: 95, color: "#44b621"],
-                [value: 105, color: "#f1d801"],
-                [value: 120, color: "#d04e00"],
-                [value: 140, color: "#bc2323"]
-            ]
-        }
-        standardTile("restart", "device.restart", inactiveLabel: false, decoration: "flat") {
-        	state "default", action:"restart", label: "Restart", displayName: "Restart"
-        }
-        standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat") {
-        	state "default", action:"refresh.refresh", icon: "st.secondary.refresh"
-        }
-        main "currentColor"
-        details(["rgbSelector"])
-        //details(["button", "rgbselector", "temperature", "humidity", "cpu_temp", "restart", "refresh"])
-    }
+
+		controlTile("rgbSelector", "device.color", "color", height: 6, width: 6, inactiveLabel: false) {
+			state "color", action: "color control.setColor"
+		}
+
+		main("currentColor")
+		details([
+			"rgbSelector"
+		])
+	}
 }
 
 // parse events into attributes
 def parse(String description) {
-	log.debug "Parsing '${description}'"
+	//log.debug "Parsing '${description}'"
     def map = [:]
     def descMap = parseDescriptionAsMap(description)
-    log.debug "descMap: ${descMap}"
+    //log.debug "descMap: ${descMap}"
     
     def body = new String(descMap["body"].decodeBase64())
     log.debug "body: ${body}"
@@ -138,28 +94,36 @@ def parse(String description) {
     log.debug "result: ${result}"
 
 	if (result){
-    	log.debug "Device is ALIVE"
+    	//log.debug "Device is ALIVE"
    		//sendEvent(name: "switch", value: "on")
     }
     if (result.containsKey("temperature")) {
-    log.debug "temperature: ${result.temperature}"
+    //log.debug "temperature: ${result.temperature}"
     sendEvent(name: "temperature", value: result.temperature)
     }
     if (result.containsKey("humidity")) {
-    log.debug "humidity: ${result.humidity}"
+    //log.debug "humidity: ${result.humidity}"
     sendEvent(name: "humidity", value: result.humidity)
     }
     if (result.containsKey("rssi")) {
-    log.debug "rssi: ${result.rssi}"
+    //log.debug "rssi: ${result.rssi}"
     sendEvent(name: "rssi", value: result.rssi)
     }
     if (result.containsKey("lqi")) {
-    log.debug "link quality: ${result.lqi}"
+    //log.debug "link quality: ${result.lqi}"
     sendEvent(name: "lqi", value: result.lqi)
     }
     if (result.containsKey("cpu_temp")) {
-    log.debug "cpu temp: ${result.cpu_temp}"
+    //log.debug "cpu temp: ${result.cpu_temp}"
     sendEvent(name: "cpu_temp", value: result.cpu_temp)
+    }
+    if (result.containsKey("colortemp")) {
+    //log.debug "white temp: ${result.colortemp}"
+    sendEvent(name: "colorTemperature", value: result.colortemp)
+    }
+    if (result.containsKey("color")) {
+    log.debug "color: ${result.color}"
+    sendEvent(name: "color", value: result.color)
     }
 	// TODO: handle 'lightingMode' attribute
 	// TODO: handle 'activity' attribute
@@ -167,9 +131,7 @@ def parse(String description) {
 	// TODO: handle 'colorValue' attribute
 	// TODO: handle 'hue' attribute
 	// TODO: handle 'saturation' attribute
-	// TODO: handle 'color' attribute
 	// TODO: handle 'colorMode' attribute
-	// TODO: handle 'colorTemperature' attribute
 	// TODO: handle 'checkInterval' attribute
 	// TODO: handle 'DeviceWatch-DeviceStatus' attribute
 	// TODO: handle 'healthStatus' attribute
@@ -203,7 +165,7 @@ def on() {
 	postAction("PUT", "/api/enable?enable=on")
 }
 
-def setColorValue() {
+def setColorValue(value) {
 	log.debug "Executing 'setColorValue'"
 	// TODO: handle 'setColorValue' command
 }
@@ -219,13 +181,13 @@ def setSaturation() {
 }
 
 def setColor(value) {
-	log.trace "Executing 'setColor' ${value}"
-	postAction("PUT", "/api/hsvcolor?hue=${value.hue}&saturation=${value.saturation}&lightness=100")
+	log.debug "Executing 'setColor' ${value}"
+	postAction("PUT", "/api/hsvcolor?hue=${value.hue}&saturation=${value.saturation}")
 }
 
-def setColorTemperature() {
+def setColorTemperature(value) {
 	log.debug "Executing 'setColorTemperature'"
-	// TODO: handle 'setColorTemperature' command
+	postAction("PUT", "/api/whitetemp?kelvin=${value}")
 }
 
 def configure() {
@@ -253,9 +215,9 @@ def refresh() {
 	postAction("GET", "/api/info")
 }
 
-def setLevel() {
+def setLevel(value) {
 	log.debug "Executing 'setLevel'"
-	// TODO: handle 'setLevel' command
+	postAction("PUT", "/api/brightness?brightness=${value}")
 }
 
 def reset() {
@@ -271,7 +233,7 @@ def postAction(meth, uri) {
             HOST: getHostAddress()
         ]
     )
-    log.debug "postAction: ${result}"
+    log.trace "postAction: ${result}"
     return result
 }
 
