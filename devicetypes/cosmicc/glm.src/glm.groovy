@@ -86,16 +86,20 @@ def parse(String description) {
     //log.debug "descMap: ${descMap}"
     
     def body = new String(descMap["body"].decodeBase64())
-    log.debug "body: ${body}"
+    //log.debug "body: ${body}"
     
     def slurper = new JsonSlurper()
     def result = slurper.parseText(body)
     
     log.debug "result: ${result}"
 
-	if (result){
+	//if (result){
     	//log.debug "Device is ALIVE"
    		//sendEvent(name: "switch", value: "on")
+    //}
+    if (result.containsKey("enabled")) {
+    log.debug "enabled: ${result.enabled}"
+    sendEvent(name: "switch", value: result.enabled)
     }
     if (result.containsKey("temperature")) {
     //log.debug "temperature: ${result.temperature}"
@@ -125,6 +129,14 @@ def parse(String description) {
     log.debug "color: ${result.color}"
     sendEvent(name: "color", value: result.color)
     }
+    if (result.containsKey("brightness")) {
+    //log.debug "brightness: ${result.brightness}"
+    sendEvent(name: "level", value: result.brightness)
+    }
+    if (result.containsKey("motion")) {
+    log.debug "motion: ${result.motion}"
+    sendEvent(name: "motion", value: result.motion)
+    }
 	// TODO: handle 'lightingMode' attribute
 	// TODO: handle 'activity' attribute
 	// TODO: handle 'presence' attribute
@@ -135,19 +147,12 @@ def parse(String description) {
 	// TODO: handle 'checkInterval' attribute
 	// TODO: handle 'DeviceWatch-DeviceStatus' attribute
 	// TODO: handle 'healthStatus' attribute
-	// TODO: handle 'healthStatus' attribute
 	// TODO: handle 'illuminance' attribute
-	// TODO: handle 'switch' attribute
 	// TODO: handle 'mode' attribute
-	// TODO: handle 'motion' attribute
 	// TODO: handle 'occupancy' attribute
-	// TODO: handle 'presence' attribute
-	// TODO: handle 'switch' attribute
-	// TODO: handle 'level' attribute
-
 }
 
-// handle commands
+// commands
 def setLightingMode() {
 	log.debug "Executing 'setLightingMode'"
 	// TODO: handle 'setLightingMode' command
