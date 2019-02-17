@@ -27,39 +27,28 @@ definition(
 preferences {
 	section("Title") {
 		input "glms", "capability.presenceSensor", multiple: true
-        input "colorlights", "capability.colorControl", multiple: true
 	}
     
 }
 
 def installed() {
 	log.debug "Installed with settings: ${settings}"
-
 	initialize()
 }
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-
 	unsubscribe()
 	initialize()
 }
 
 def initialize() {
 	// TODO: subscribe to attributes, devices, locations, etc.
-    state.ghue = 0
     schedule("*/2 * * * * ?", poll_devices)
-    schedule("* * * * * ?", huwchange)
 }
 
 // TODO: implement event handlers
 
 def poll_devices() {
  glms.poll()
-}
-
-void huechange() {
- 	colorlights.setColor(['hue': state.ghue, 'saturation': 100])
-    state.ghue = state.ghue + 1
-    if (state.ghue == 100) state.ghue = 0
 }
