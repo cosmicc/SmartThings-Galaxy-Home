@@ -134,19 +134,20 @@ def parse(String description) {
     sendEvent(name: "motion", value: result.motion)
     }
     if (result.containsKey("hue")) {
-    log.debug "hue: ${result.hue}"
+    //log.debug "hue: ${result.hue}"
     sendEvent(name: "hue", value: result.hue)
     }
     if (result.containsKey("saturation")) {
-    log.debug "saturation: ${result.saturation}"
+    //log.debug "saturation: ${result.saturation}"
     sendEvent(name: "saturation", value: result.saturation)
+    }
+    if (result.containsKey("presence")) {
+    log.debug "presence: ${result.presence}"
+    sendEvent(name: "presence", value: result.presence)
     }
 	// TODO: handle 'lightingMode' attribute
 	// TODO: handle 'activity' attribute
-	// TODO: handle 'presence' attribute
 	// TODO: handle 'colorValue' attribute
-	// TODO: handle 'hue' attribute
-	// TODO: handle 'saturation' attribute
 	// TODO: handle 'colorMode' attribute
 	// TODO: handle 'checkInterval' attribute
 	// TODO: handle 'DeviceWatch-DeviceStatus' attribute
@@ -221,7 +222,7 @@ def poll() {
 
 def refresh() {
 	log.debug "Executing 'refresh'"
-	postAction("GET", "/api/info")
+	postAction("GET", "/api/poll")
 }
 
 def setLevel(value) {
@@ -242,7 +243,7 @@ def postAction(meth, uri) {
             HOST: getHostAddress()
         ]
     )
-    log.trace "postAction: ${result}"
+    //log.trace "postAction: ${result}"
     return result
 }
 
