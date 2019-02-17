@@ -93,10 +93,6 @@ def parse(String description) {
     
     log.debug "result: ${result}"
 
-	//if (result){
-    	//log.debug "Device is ALIVE"
-   		//sendEvent(name: "switch", value: "on")
-    //}
     if (result.containsKey("enabled")) {
     log.debug "enabled: ${result.enabled}"
     sendEvent(name: "switch", value: result.enabled)
@@ -136,6 +132,14 @@ def parse(String description) {
     if (result.containsKey("motion")) {
     log.debug "motion: ${result.motion}"
     sendEvent(name: "motion", value: result.motion)
+    }
+    if (result.containsKey("hue")) {
+    log.debug "hue: ${result.hue}"
+    sendEvent(name: "hue", value: result.hue)
+    }
+    if (result.containsKey("saturation")) {
+    log.debug "saturation: ${result.saturation}"
+    sendEvent(name: "saturation", value: result.saturation)
     }
 	// TODO: handle 'lightingMode' attribute
 	// TODO: handle 'activity' attribute
