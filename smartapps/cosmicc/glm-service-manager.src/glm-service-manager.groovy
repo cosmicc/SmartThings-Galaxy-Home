@@ -44,11 +44,62 @@ def updated() {
 
 def initialize() {
 	// TODO: subscribe to attributes, devices, locations, etc.
-    schedule("*/2 * * * * ?", poll_devices)
+    subscribe(location, "mode", modeChangeHandler)
+    //schedule("*/5 * * * * ?", poll_devices)
 }
 
 // TODO: implement event handlers
 
 def poll_devices() {
- glms.poll()
+ 	glms.poll()
+}
+
+mappings {
+    path("/motion/:whichdevice/:motion") {
+        action: [PUT: "setmotion"]
+    }
+    path("/presence/:whichdevice/:presence") {
+        action: [GET: "setpresence"]
+    }
+}
+
+def setmotion() {
+	log.debug "Webhook Recieved from Device: ${params.whichdevice} Motion: ${params.motion}"
+	for (each in glms) {
+    	log.trace "${each}"
+    	if (each == params.whichdevice) {
+        	log.trace "2"
+        	if (params.motion == "on") {
+            	log.trace "${each} motion ${params.motion}"
+    			each.onmotion()
+            } else {
+            	log.trace "${each} motion ${params.motion}"
+            	each.offmotion()
+            }
+    	}
+    }
+}
+
+def setpresence() {
+	log.debug "Webhook Recieved from Device: ${params.whichdevice} Presence: ${params.presence}"
+	for (each in glms) {
+    	if (each == params.whichdevice) {
+        	if (params.presence == "present") {
+    			each.onpresence()
+            } else {
+            	each.offpresence()
+            }
+    	}
+    }
+}
+
+def modeChangeHandler(evt) {
+	if (evt.value == "Away") {
+		log.debug "Changing Mode to ${evt.value}"
+    	glms.awayon()
+    }
+    if (evt.value == "Home") {
+		log.debug "Changing Mode to ${evt.value}"
+   		glms.awayoff()
+    }
 }
